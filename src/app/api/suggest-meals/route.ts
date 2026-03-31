@@ -44,47 +44,85 @@ export async function POST(req: Request) {
   const themes = type === "dinner" ? dinnerThemes : lunchThemes;
   const theme = themes[Math.floor(Math.random() * themes.length)];
 
-  const prompt =
-    type === "dinner"
-      ? `Suggest 4-5 DINNER ideas for a health-conscious woman. These should be meal-prep friendly — cook once, eat for 3-4 days. She shops at HEB and Trader Joe's.
+  let prompt: string;
+
+  if (type === "dinner" && stylePrompt) {
+    // Style-driven dinner prompt — style is the MAIN instruction
+    prompt = `You are a meal planning assistant. Suggest 4-5 DINNER ideas that STRICTLY follow this theme:
+
+>>> ${stylePrompt} <<<
+
+This is the #1 priority. EVERY meal you suggest MUST fit this theme. Do not suggest generic meals.
+
+Context about the person:
+- Shops at HEB and Trader Joe's
+- Prefers simple, practical cooking — not a chef
+- Likes meal prep (cook once, eat 3-4 days)
+- Her commonly purchased items: ${topItems}
+
+Rules:
+- Every meal must be a REAL recipe people actually cook
+- Do NOT randomly mash ingredients together
+- Be creative — give her something she hasn't thought of
+${dismissedList.length > 0 ? `- DO NOT suggest: ${dismissedList.join(", ")}` : ""}`;
+  } else if (type === "dinner") {
+    prompt = `Suggest 4-5 DINNER ideas for a health-conscious woman. Meal-prep friendly — cook once, eat 3-4 days. She shops at HEB and Trader Joe's.
 
 Her style:
 - Loves Mexican-inspired food (tacos, enchiladas, taco bowls, burritos)
 - Big on lean protein: ground turkey, chicken breast, salmon pouches
 - Buys Annie's/Goodles protein mac, cauliflower pizza for easy nights
-- NOT a fancy cook — keep it simple, practical, and satisfying
+- NOT a fancy cook — simple, practical, satisfying
 - Likes big batch meals she can portion out
 
-CRITICAL RULES — read carefully:
-- Every meal must be a REAL recipe that a normal person would actually cook and enjoy eating
-- Do NOT randomly combine items from her shopping history. Just because she buys yogurt AND chicken does NOT mean they go in the same dish.
-- Stick to proven dinner formats: tacos/burritos, stir fry, pasta, sheet pan, soup/chili, casserole, rice bowls
-- These are DINNER meal preps. Think one-pot, sheet pan, casseroles, bowls
-- Be creative and varied — don't just suggest taco bowls every time
-${stylePrompt ? `\nSPECIAL REQUEST: ${stylePrompt}` : `- ${theme}`}
+Rules:
+- Every meal must be a REAL recipe a normal person would cook
+- Do NOT randomly combine shopping history items into one dish
+- Stick to proven formats: tacos, stir fry, pasta, sheet pan, soup/chili, casserole, rice bowls
+- Be creative and varied
+- ${theme}
 
 Her frequently purchased items: ${topItems}
-${dismissedList.length > 0 ? `\nDO NOT suggest these meals (she already dismissed them): ${dismissedList.join(", ")}` : ""}`
-      : `Suggest 4-5 LUNCH ideas for a health-conscious woman. These should be easy to throw together in the morning (under 10 min) or grab-and-go.
+${dismissedList.length > 0 ? `\nDO NOT suggest: ${dismissedList.join(", ")}` : ""}`;
+  } else if (type === "lunch" && stylePrompt) {
+    // Style-driven lunch prompt
+    prompt = `You are a meal planning assistant. Suggest 4-5 LUNCH ideas that STRICTLY follow this theme:
+
+>>> ${stylePrompt} <<<
+
+This is the #1 priority. EVERY lunch you suggest MUST fit this theme. Do not suggest generic lunches.
+
+Context about the person:
+- Shops at HEB and Trader Joe's
+- Needs lunches she can pack for work — fast, practical
+- Her commonly purchased items: ${topItems}
+
+Rules:
+- Every lunch must taste good as a REAL combination
+- Do NOT randomly mash ingredients together
+- No fruit in savory dishes
+- Be creative — give her something she hasn't thought of
+${dismissedList.length > 0 ? `- DO NOT suggest: ${dismissedList.join(", ")}` : ""}`;
+  } else {
+    prompt = `Suggest 4-5 LUNCH ideas for a health-conscious woman. Easy to throw together in the morning (under 10 min) or grab-and-go.
 
 Her style:
-- Buys lots of deli meat, cheese sticks, hard boiled eggs, tortillas, sourdough bread
+- Buys deli meat, cheese sticks, hard boiled eggs, tortillas, sourdough bread
 - Likes salad kits, hummus, dipping veggies, yogurt
 - Shops at HEB and Trader Joe's
-- NOT into complicated recipes — needs fast, practical, packable lunches
+- Needs fast, practical, packable lunches
 
-CRITICAL RULES — read carefully:
-- Every meal must taste good as a REAL combination. Ask yourself: would a normal person actually eat this together?
-- Do NOT randomly combine items from her shopping history into one meal. Just because she buys raspberries AND white beans does NOT mean they go together.
-- NEVER put fruit in savory bowls. Fruit is for snacking or breakfast, not lunch bowls.
-- NEVER combine beans/legumes with yogurt or eggs in the same dish unless it's a well-known real recipe.
-- Stick to proven lunch formats: deli wraps/sandwiches, salads with protein, snack/bento plates, grain bowls, soup + side
-- Think about what a real person would pack for work lunch
-- Be creative and varied — don't just suggest turkey wraps every time
-${stylePrompt ? `\nSPECIAL REQUEST: ${stylePrompt}` : `- ${theme}`}
+Rules:
+- Every meal must taste good as a REAL combination
+- Do NOT randomly combine shopping history items
+- No fruit in savory bowls, no beans with yogurt
+- Stick to proven formats: wraps, salads, snack plates, grain bowls, sandwiches
+- Be creative and varied
+- ${theme}
 
 Her frequently purchased items: ${topItems}
-${dismissedList.length > 0 ? `\nDO NOT suggest these meals (she already dismissed them): ${dismissedList.join(", ")}` : ""}`;
+${dismissedList.length > 0 ? `\nDO NOT suggest: ${dismissedList.join(", ")}` : ""}`;
+  }
 
   const message = await client.messages.create({
     model: "claude-sonnet-4-20250514",
