@@ -6,6 +6,7 @@ import GroceryList from "@/components/GroceryList";
 import Pantry, { PantryItem } from "@/components/Pantry";
 import SavedRecipes, { SavedRecipe } from "@/components/SavedRecipes";
 import RecipeModal, { Recipe } from "@/components/RecipeModal";
+import LockScreen from "@/components/LockScreen";
 import { useLocalStorage } from "@/lib/use-local-storage";
 import { buildGroceryList } from "@/lib/build-grocery-list";
 import seedLists from "@/data/past-lists.json";
@@ -49,6 +50,16 @@ function buildInitialPantry(): PantryItem[] {
 }
 
 export default function Home() {
+  const [unlocked, setUnlocked] = useLocalStorage("fizz-unlocked", false);
+
+  if (!unlocked) {
+    return <LockScreen onUnlock={() => setUnlocked(true)} />;
+  }
+
+  return <App />;
+}
+
+function App() {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [pastLists] = useState<PastList[]>(seedLists);
   const [dinnerPlans, setDinnerPlans] = useState<MealPlan[]>([]);
