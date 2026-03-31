@@ -30,23 +30,19 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem }: {
         <p className="text-muted text-sm max-w-[260px] mb-6">
           Pick meals from the Plan tab or add your go-to items below
         </p>
-        <button onClick={() => setShowAdd(true)}
-          className="bg-accent text-white px-8 py-3.5 rounded-full text-sm font-semibold shadow-button active:scale-[0.98] transition-transform">
-          + Start Adding Items
-        </button>
-        {showAdd && (
-          <div className="mt-5 w-full max-w-sm">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">Your Favorites</p>
-            <div className="flex flex-wrap gap-1.5 justify-center">
-              {FAVORITES.map((fav, i) => (
-                <button key={i} onClick={() => onAddItem({ ...fav, checked: false })}
-                  className="text-xs bg-card shadow-soft text-foreground px-3 py-1.5 rounded-full hover:shadow-lifted hover:text-accent transition-all">
-                  + {fav.name}
-                </button>
-              ))}
-            </div>
+        <div className="w-full max-w-sm mt-2">
+          <div className="flex gap-2">
+            <input type="text" value={customItem} onChange={(e) => setCustomItem(e.target.value)}
+              placeholder="Add chips, snacks, anything..."
+              className="flex-1 text-sm bg-card shadow-soft rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent/30"
+              onKeyDown={(e) => { if (e.key === "Enter" && customItem.trim()) { onAddItem({ name: customItem.trim(), category: "Other", checked: false }); setCustomItem(""); } }}
+            />
+            <button onClick={() => { if (customItem.trim()) { onAddItem({ name: customItem.trim(), category: "Other", checked: false }); setCustomItem(""); } }}
+              className="bg-accent text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-button active:scale-95 transition-transform">
+              Add
+            </button>
           </div>
-        )}
+        </div>
       </div>
     );
   }
