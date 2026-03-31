@@ -87,7 +87,7 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem }: {
           <span className="text-xs font-bold text-accent">{Math.round(progress)}%</span>
         </div>
         <div className="h-2.5 bg-sand rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-accent to-orange-300 rounded-full transition-all duration-500"
+          <div className="h-full bg-gradient-to-r from-accent to-pink-300 rounded-full transition-all duration-500"
             style={{ width: `${progress}%` }} />
         </div>
       </div>

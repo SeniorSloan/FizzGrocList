@@ -65,8 +65,10 @@ export default function Home() {
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [pastLists] = useState<PastList[]>(seedLists);
-  const [dinnerPlans, setDinnerPlans] = useState<MealPlan[]>([]);
-  const [lunchPlans, setLunchPlans] = useState<MealPlan[]>([]);
+
+  // Cached meal suggestions — persist between visits
+  const [dinnerPlans, setDinnerPlans] = useLocalStorage<MealPlan[]>("fizz-cached-dinners", []);
+  const [lunchPlans, setLunchPlans] = useLocalStorage<MealPlan[]>("fizz-cached-lunches", []);
   const [selectedDinners, setSelectedDinners] = useState<Set<number>>(new Set());
   const [selectedLunches, setSelectedLunches] = useState<Set<number>>(new Set());
 
@@ -74,7 +76,6 @@ function App() {
   const [pantryItems, setPantryItems] = useLocalStorage<PantryItem[]>("fizz-pantry", buildInitialPantry());
   const [savedRecipes, setSavedRecipes] = useLocalStorage<SavedRecipe[]>("fizz-saved-recipes", []);
   const [dismissedMeals, setDismissedMeals] = useLocalStorage<string[]>("fizz-dismissed", []);
-
   const [favoriteRecipes, setFavoriteRecipes] = useLocalStorage<SavedRecipe[]>("fizz-favorites", []);
 
   const [loadingDinners, setLoadingDinners] = useState(false);
@@ -92,8 +93,10 @@ function App() {
   const allItems = pastLists.flatMap((l) => l.items);
   const inStockPantry = pantryItems.filter((p) => p.inStock).map((p) => p.name);
 
+  // Only fetch on first visit if no cached suggestions exist
   useEffect(() => {
-    if (pastLists.length > 0) { fetchDinners(); fetchLunches(); }
+    if (pastLists.length > 0 && dinnerPlans.length === 0) fetchDinners();
+    if (pastLists.length > 0 && lunchPlans.length === 0) fetchLunches();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -136,15 +139,34 @@ function App() {
     });
   };
 
+  // Recipe cache — avoid re-fetching the same recipe
+  const [recipeCache, setRecipeCache] = useLocalStorage<Record<string, Recipe>>("fizz-recipe-cache", {});
+
   const handleMealClick = async (meal: MealPlan) => {
-    setLoadingRecipe(meal.name); setAddedToList(false);
+    setAddedToList(false);
+
+    // Check cache first (also check saved recipes and favorites)
+    const cached = recipeCache[meal.name]
+      || savedRecipes.find((r) => r.mealName === meal.name)?.recipe
+      || favoriteRecipes.find((r) => r.mealName === meal.name)?.recipe;
+
+    if (cached) {
+      setActiveRecipe(cached);
+      return;
+    }
+
+    setLoadingRecipe(meal.name);
     try {
       const res = await fetch("/api/get-recipe", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ meal }),
       });
       const data = await res.json();
-      if (data.recipe) setActiveRecipe(data.recipe);
+      if (data.recipe) {
+        setActiveRecipe(data.recipe);
+        // Cache it
+        setRecipeCache((prev) => ({ ...prev, [meal.name]: data.recipe }));
+      }
     } catch (e) { console.error(e); }
     setLoadingRecipe(null);
   };
@@ -202,15 +224,26 @@ function App() {
     if (selectedMeals.length === 0) return;
     setLoadingList(true);
     try {
-      // Step 1: Fetch all recipes in parallel (the only Claude calls needed)
+      // Step 1: Fetch recipes — use cache when available, only call API for uncached
       const recipePromises = selectedMeals.map(async (meal) => {
+        const cached = recipeCache[meal.name]
+          || savedRecipes.find((r) => r.mealName === meal.name)?.recipe
+          || favoriteRecipes.find((r) => r.mealName === meal.name)?.recipe;
+
+        if (cached) {
+          return { recipe: cached, mealName: meal.name, addedAt: new Date().toISOString() };
+        }
+
         try {
           const res = await fetch("/api/get-recipe", {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ meal }),
           });
           const data = await res.json();
-          if (data.recipe) return { recipe: data.recipe as Recipe, mealName: meal.name, addedAt: new Date().toISOString() };
+          if (data.recipe) {
+            setRecipeCache((prev) => ({ ...prev, [meal.name]: data.recipe }));
+            return { recipe: data.recipe as Recipe, mealName: meal.name, addedAt: new Date().toISOString() };
+          }
         } catch { /* skip */ }
         return null;
       });
