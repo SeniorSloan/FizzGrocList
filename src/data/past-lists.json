@@ -1,0 +1,68 @@
+[
+  {
+    "id": "list-1",
+    "date": "List 1",
+    "items": ["Avocado", "Eggs", "High protein pasta", "Zucchini", "Cottage cheese", "Pasta sauce", "Ground chicken", "Ground turkey", "Mini tomatoes", "Bagged greens", "Kale", "Spring mix", "Olives", "Pre cooked chicken", "Snacks", "Cold brew", "Energy drinks", "Olipops", "Wipes", "Toothpaste", "Lotion", "Toilet paper", "Tampons", "Pads", "Mini laundry detergent"],
+    "raw": ""
+  },
+  {
+    "id": "list-2",
+    "date": "List 2",
+    "items": ["Salmon cans", "Edamame", "Frozen brown rice", "Cucumbers", "Fruit", "Rotisserie chicken", "White beans", "Yellow onion", "Garlic", "Chicken stock", "Half and half", "Parmesan", "Energy drinks", "Olipops", "Green curry sauce", "Bell pepper", "Red chilies", "Chicken breast", "Frozen edamame", "Wild rice", "Cheese pieces", "Cold brew", "Turkey breast", "Grapes", "Raspberries", "Bread", "Avocado"],
+    "raw": ""
+  },
+  {
+    "id": "list-3",
+    "date": "List 3",
+    "items": ["White onion", "Jalapeno", "Raspberries", "Carrots", "Snap peas", "Taco seasoning", "Ground turkey", "Black beans", "Rotel", "Diced green chilies", "Reduced fat cream cheese", "Greek yogurt", "Enchilada sauce", "Brown rice", "Dave's Killer Bagels", "Deli turkey", "Energy drinks", "Olipop"],
+    "raw": ""
+  },
+  {
+    "id": "list-4",
+    "date": "List 4",
+    "items": ["Protein mac and cheese", "Chicken nuggets", "Salad kit", "Frozen mixed veggies", "Energy drinks", "Vanilla yogurt", "Cards", "Tissue paper"],
+    "raw": ""
+  },
+  {
+    "id": "list-5",
+    "date": "List 5 - Trader Joe's & HEB",
+    "items": ["Grilled chicken", "Salad kit", "Green beans", "Shredded parmesan", "Energy drinks", "Prebiotic soda", "Cauliflower pizza", "Tortillas", "Buffalo sauce", "Vanilla yogurt", "Berries", "Chicken breast", "Mac and cheese box", "Coffee"],
+    "raw": ""
+  },
+  {
+    "id": "list-6",
+    "date": "List 6 - HEB",
+    "items": ["Energy drinks", "Olipops", "Blooms", "Salmon pouches", "Cauliflower pizza", "Raspberries", "Apples", "Chili powder", "Taco shells", "Taco seasoning", "Green chilies and tomatoes", "Ground turkey", "Black beans", "Limes", "Shredded cheese", "Guacamole", "Ezekiel tortillas", "Precooked chicken", "Cheese sticks", "Greens", "Snacks"],
+    "raw": ""
+  },
+  {
+    "id": "list-7",
+    "date": "List 7",
+    "items": ["Yogurt cups", "Frozen chicken sausage patties", "Deli meat", "Spinach", "Green beans", "Raspberries", "Chicken breast", "Annie's Fiber Mac", "Small milk", "Carrots", "Cucumbers", "Energy drinks", "Olipops", "Blooms", "Pimento cheese dip", "Hummus", "Mini laundry detergent", "Tampons", "Pads"],
+    "raw": ""
+  },
+  {
+    "id": "list-8",
+    "date": "List 8",
+    "items": ["Energy drinks", "Blooms", "Olipops", "Applegate chicken sausage", "Ground turkey", "Diced onion", "Diced garlic", "Diced green chilies", "Jalapeno", "White beans", "Chicken broth", "Greek yogurt", "Kale", "Avocado spread", "Boiled eggs", "Cheese sticks", "Deli meat", "Cheese slices", "Toilet paper"],
+    "raw": ""
+  },
+  {
+    "id": "list-9",
+    "date": "List 9",
+    "items": ["Strawberries", "Frozen blueberries", "Green beans", "Zucchini", "Carrots", "Dipping veggies", "Ground beef", "Salad bag", "Annie's Fiber Mac", "Small milk", "Hard boiled eggs", "Shaved parmesan", "Frozen nuggets", "Deli meat", "Yogurt", "Energy drinks", "Olipop", "Bloom", "Protein bars"],
+    "raw": ""
+  },
+  {
+    "id": "list-10",
+    "date": "List 10",
+    "items": ["Sumo oranges", "Apples", "Avocado spread", "Hard boiled eggs", "Sourdough bread", "Paprika", "Protein mac and cheese", "Tuna packs", "Salmon packs", "Energy drinks", "Olipops", "Blooms", "Deli meat", "Protein bars", "Chicken breast", "Cold brew", "Yogurt drinks", "Toothpaste", "Sunscreen", "Under eye cream"],
+    "raw": ""
+  },
+  {
+    "id": "list-11",
+    "date": "List 11",
+    "items": ["Persian cucumbers", "Oranges", "Grapes", "Pico de gallo", "Greens", "Cheese slices", "Cheese sticks", "Deli meat", "Dip", "Hard boiled eggs", "Chicken breast", "Shredded cheese", "Sourdough bread", "Wheat Thins", "Rice", "Beans", "Prebiotic sodas", "Energy drinks"],
+    "raw": ""
+  }
+]

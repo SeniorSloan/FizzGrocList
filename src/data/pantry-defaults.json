@@ -1,0 +1,40 @@
+{
+  "spices": [
+    "Salt",
+    "Black pepper",
+    "Taco seasoning",
+    "Chili powder",
+    "Paprika",
+    "Garlic powder",
+    "Onion powder",
+    "Cumin",
+    "Italian seasoning",
+    "Red pepper flakes",
+    "Cinnamon"
+  ],
+  "oils_and_vinegars": [
+    "Olive oil",
+    "Cooking spray",
+    "Soy sauce",
+    "Hot sauce",
+    "Buffalo sauce"
+  ],
+  "pantry_staples": [
+    "Rice",
+    "Pasta",
+    "Chicken broth",
+    "Canned black beans",
+    "Canned white beans",
+    "Enchilada sauce",
+    "Diced green chilies",
+    "Rotel",
+    "Pasta sauce",
+    "Honey",
+    "Brown sugar"
+  ],
+  "baking": [
+    "Flour",
+    "Baking powder",
+    "Vanilla extract"
+  ]
+}
