@@ -2,6 +2,7 @@
 
 export type Recipe = {
   title: string;
+  description?: string;
   prepTime: string;
   cookTime: string;
   servings: number;
@@ -10,8 +11,9 @@ export type Recipe = {
   tips: string;
 };
 
-export default function RecipeModal({ recipe, onClose, onAddToList, addedToList }: {
+export default function RecipeModal({ recipe, onClose, onAddToList, addedToList, isFavorite, onToggleFavorite }: {
   recipe: Recipe; onClose: () => void; onAddToList: () => void; addedToList: boolean;
+  isFavorite: boolean; onToggleFavorite: () => void;
 }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50" onClick={onClose}>
@@ -19,16 +21,36 @@ export default function RecipeModal({ recipe, onClose, onAddToList, addedToList 
         onClick={(e) => e.stopPropagation()}>
 
         {/* Header */}
-        <div className="sticky top-0 bg-card px-5 pt-5 pb-4 rounded-t-3xl">
-          <div className="flex items-start justify-between">
-            <h2 className="text-xl font-bold leading-tight pr-4 tracking-tight">{recipe.title}</h2>
-            <button onClick={onClose}
-              className="w-8 h-8 rounded-full bg-sand flex items-center justify-center text-muted hover:text-foreground transition-colors flex-shrink-0">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+        <div className="sticky top-0 bg-card px-5 pt-5 pb-4 rounded-t-3xl z-10">
+          <div className="flex items-start justify-between gap-2">
+            <h2 className="text-xl font-bold leading-tight tracking-tight flex-1">{recipe.title}</h2>
+            <div className="flex gap-2 flex-shrink-0">
+              {/* Favorite button */}
+              <button onClick={onToggleFavorite}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                  isFavorite ? "bg-accent-light" : "bg-sand hover:bg-accent-light"
+                }`}>
+                <svg className={`w-4 h-4 transition-colors ${isFavorite ? "text-accent fill-accent" : "text-muted"}`}
+                  viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                  fill={isFavorite ? "currentColor" : "none"}>
+                  <path strokeLinecap="round" strokeLinejoin="round"
+                    d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+                </svg>
+              </button>
+              {/* Close */}
+              <button onClick={onClose}
+                className="w-8 h-8 rounded-full bg-sand flex items-center justify-center text-muted hover:text-foreground transition-colors">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
+
+          {recipe.description && (
+            <p className="text-xs text-muted mt-1 leading-relaxed">{recipe.description}</p>
+          )}
+
           {/* Meta */}
           <div className="flex gap-3 mt-3">
             {[
@@ -74,7 +96,6 @@ export default function RecipeModal({ recipe, onClose, onAddToList, addedToList 
             </div>
           </div>
 
-          {/* Tips */}
           {recipe.tips && (
             <div className="bg-warm rounded-2xl p-4">
               <p className="text-xs leading-relaxed">
@@ -84,15 +105,23 @@ export default function RecipeModal({ recipe, onClose, onAddToList, addedToList 
           )}
         </div>
 
-        {/* Action */}
-        <div className="sticky bottom-0 bg-card px-5 py-4">
+        {/* Actions */}
+        <div className="sticky bottom-0 bg-card px-5 py-4 space-y-2">
           <button onClick={onAddToList} disabled={addedToList}
-            className={`w-full py-4 rounded-full text-sm font-bold transition-all active:scale-[0.98] ${
+            className={`w-full py-3.5 rounded-full text-sm font-bold transition-all active:scale-[0.98] ${
               addedToList
                 ? "bg-sage-light text-sage"
                 : "bg-accent text-white hover:bg-accent-dark shadow-button"
             }`}>
-            {addedToList ? "✓ Added to List & Saved" : "Add to Grocery List & Save Recipe"}
+            {addedToList ? "✓ Added to Grocery List" : "Add to Grocery List"}
+          </button>
+          <button onClick={onToggleFavorite}
+            className={`w-full py-3 rounded-full text-sm font-semibold transition-all active:scale-[0.98] ${
+              isFavorite
+                ? "bg-accent-light text-accent"
+                : "bg-sand text-muted hover:text-accent"
+            }`}>
+            {isFavorite ? "♥ Saved to Favorites" : "♡ Save to Favorites"}
           </button>
         </div>
       </div>

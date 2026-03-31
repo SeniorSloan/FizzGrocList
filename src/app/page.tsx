@@ -6,6 +6,7 @@ import GroceryList from "@/components/GroceryList";
 import Pantry, { PantryItem } from "@/components/Pantry";
 import SavedRecipes, { SavedRecipe } from "@/components/SavedRecipes";
 import RecipeModal, { Recipe } from "@/components/RecipeModal";
+import CravingSearch from "@/components/CravingSearch";
 import LockScreen from "@/components/LockScreen";
 import StylePicker from "@/components/StylePicker";
 import { DINNER_STYLES, LUNCH_STYLES } from "@/lib/meal-styles";
@@ -74,9 +75,12 @@ function App() {
   const [savedRecipes, setSavedRecipes] = useLocalStorage<SavedRecipe[]>("fizz-saved-recipes", []);
   const [dismissedMeals, setDismissedMeals] = useLocalStorage<string[]>("fizz-dismissed", []);
 
+  const [favoriteRecipes, setFavoriteRecipes] = useLocalStorage<SavedRecipe[]>("fizz-favorites", []);
+
   const [loadingDinners, setLoadingDinners] = useState(false);
   const [loadingLunches, setLoadingLunches] = useState(false);
   const [loadingList, setLoadingList] = useState(false);
+  const [loadingSearch, setLoadingSearch] = useState(false);
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
   const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
   const [addedToList, setAddedToList] = useState(false);
@@ -159,6 +163,35 @@ function App() {
     setAddedToList(true);
   };
 
+  const handleCravingSearch = async (query: string) => {
+    setLoadingSearch(true);
+    try {
+      const res = await fetch("/api/search-recipe", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, shoppingHistory: allItems }),
+      });
+      const data = await res.json();
+      if (data.recipe) {
+        setActiveRecipe(data.recipe);
+        setAddedToList(false);
+      }
+    } catch (e) { console.error(e); }
+    setLoadingSearch(false);
+  };
+
+  const isRecipeFavorited = (recipe: Recipe) =>
+    favoriteRecipes.some((f) => f.recipe.title === recipe.title);
+
+  const toggleFavorite = (recipe: Recipe) => {
+    if (isRecipeFavorited(recipe)) {
+      setFavoriteRecipes((prev) => prev.filter((f) => f.recipe.title !== recipe.title));
+    } else {
+      setFavoriteRecipes((prev) => [...prev, {
+        recipe, mealName: recipe.title, addedAt: new Date().toISOString(),
+      }]);
+    }
+  };
+
   const totalSelected = selectedDinners.size + selectedLunches.size;
 
   const handleBuildList = async () => {
@@ -209,7 +242,7 @@ function App() {
   const tabs: { key: Tab; label: string; icon: string; badge?: number }[] = [
     { key: "home", label: "Plan", icon: "✨" },
     { key: "grocery", label: "List", icon: "🛒", badge: uncheckedCount || undefined },
-    { key: "recipes", label: "Recipes", icon: "📖", badge: savedRecipes.length || undefined },
+    { key: "recipes", label: "Recipes", icon: "📖", badge: (savedRecipes.length + favoriteRecipes.length) || undefined },
     { key: "pantry", label: "Pantry", icon: "🏠" },
   ];
 
@@ -257,6 +290,9 @@ function App() {
       <main className="flex-1 max-w-lg mx-auto w-full px-4 py-6">
         {activeTab === "home" && (
           <div className="pb-24">
+            {/* Craving search */}
+            <CravingSearch onRecipeFound={handleCravingSearch} loading={loadingSearch} />
+
             <div className="mb-6">
               <h2 className="text-lg font-bold tracking-tight">Plan Your Week</h2>
               <p className="text-xs text-muted mt-1">
@@ -313,10 +349,11 @@ function App() {
         )}
 
         {activeTab === "recipes" && (
-          <SavedRecipes recipes={savedRecipes}
-            onViewRecipe={(recipe) => { setActiveRecipe(recipe); setAddedToList(true); }}
+          <SavedRecipes recipes={savedRecipes} favorites={favoriteRecipes}
+            onViewRecipe={(recipe) => { setActiveRecipe(recipe); setAddedToList(false); }}
             onRemove={(i) => setSavedRecipes((prev) => prev.filter((_, idx) => idx !== i))}
             onClearAll={() => setSavedRecipes([])}
+            onRemoveFavorite={(i) => setFavoriteRecipes((prev) => prev.filter((_, idx) => idx !== i))}
           />
         )}
 
@@ -343,7 +380,9 @@ function App() {
 
       {activeRecipe && (
         <RecipeModal recipe={activeRecipe} onClose={() => setActiveRecipe(null)}
-          onAddToList={handleAddRecipeToList} addedToList={addedToList} />
+          onAddToList={handleAddRecipeToList} addedToList={addedToList}
+          isFavorite={isRecipeFavorited(activeRecipe)}
+          onToggleFavorite={() => toggleFavorite(activeRecipe)} />
       )}
     </div>
   );
