@@ -7,6 +7,8 @@ import Pantry, { PantryItem } from "@/components/Pantry";
 import SavedRecipes, { SavedRecipe } from "@/components/SavedRecipes";
 import RecipeModal, { Recipe } from "@/components/RecipeModal";
 import LockScreen from "@/components/LockScreen";
+import StylePicker from "@/components/StylePicker";
+import { DINNER_STYLES, LUNCH_STYLES } from "@/lib/meal-styles";
 import { useLocalStorage } from "@/lib/use-local-storage";
 import { buildGroceryList } from "@/lib/build-grocery-list";
 import seedLists from "@/data/past-lists.json";
@@ -80,6 +82,8 @@ function App() {
   const [addedToList, setAddedToList] = useState(false);
   const [plannedDinners, setPlannedDinners] = useState<string[]>([]);
   const [plannedLunches, setPlannedLunches] = useState<string[]>([]);
+  const [dinnerStyle, setDinnerStyle] = useState<string | null>(null);
+  const [lunchStyle, setLunchStyle] = useState<string | null>(null);
 
   const allItems = pastLists.flatMap((l) => l.items);
   const inStockPantry = pantryItems.filter((p) => p.inStock).map((p) => p.name);
@@ -89,23 +93,31 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchMeals = async (type: "dinner" | "lunch") => {
+  const fetchMeals = async (type: "dinner" | "lunch", styleOverride?: string | null) => {
     const setLoading = type === "dinner" ? setLoadingDinners : setLoadingLunches;
     const setPlans = type === "dinner" ? setDinnerPlans : setLunchPlans;
     const setSelected = type === "dinner" ? setSelectedDinners : setSelectedLunches;
+    const currentStyle = styleOverride !== undefined
+      ? styleOverride
+      : type === "dinner" ? dinnerStyle : lunchStyle;
+
+    // Find the style prompt
+    const styles = type === "dinner" ? DINNER_STYLES : LUNCH_STYLES;
+    const stylePrompt = currentStyle ? styles.find((s) => s.id === currentStyle)?.prompt : null;
+
     setLoading(true); setSelected(new Set());
     try {
       const res = await fetch("/api/suggest-meals", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: allItems, type, dismissed: dismissedMeals }),
+        body: JSON.stringify({ items: allItems, type, dismissed: dismissedMeals, style: stylePrompt }),
       });
       const data = await res.json();
       setPlans(data.meals);
     } catch (e) { console.error(e); }
     setLoading(false);
   };
-  const fetchDinners = () => fetchMeals("dinner");
-  const fetchLunches = () => fetchMeals("lunch");
+  const fetchDinners = (style?: string | null) => fetchMeals("dinner", style);
+  const fetchLunches = (style?: string | null) => fetchMeals("lunch", style);
 
   const handleDismiss = (type: "dinner" | "lunch", index: number) => {
     const plans = type === "dinner" ? dinnerPlans : lunchPlans;
@@ -252,15 +264,38 @@ function App() {
               </p>
             </div>
 
+            {/* Dinner style picker */}
+            <div className="mb-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-2">What kind of dinners?</h3>
+              <StylePicker
+                styles={DINNER_STYLES}
+                selected={dinnerStyle}
+                onSelect={(id) => { setDinnerStyle(id); setPlannedDinners([]); fetchDinners(id); }}
+                loading={loadingDinners}
+              />
+            </div>
+
             <MealSection
-              title="Dinners" subtitle="Meal prep — cook once, eat for days"
+              title="Dinners" subtitle={dinnerStyle ? DINNER_STYLES.find((s) => s.id === dinnerStyle)?.label || "" : "Meal prep — cook once, eat for days"}
               meals={dinnerPlans} selectedMeals={selectedDinners} plannedMeals={plannedDinners}
               onToggle={(i) => setSelectedDinners((p) => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; })}
               onMealClick={handleMealClick} onDismiss={(i) => handleDismiss("dinner", i)}
               onRefresh={() => { setPlannedDinners([]); fetchDinners(); }} loading={loadingDinners} loadingRecipe={loadingRecipe}
             />
+
+            {/* Lunch style picker */}
+            <div className="mb-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-2">What kind of lunches?</h3>
+              <StylePicker
+                styles={LUNCH_STYLES}
+                selected={lunchStyle}
+                onSelect={(id) => { setLunchStyle(id); setPlannedLunches([]); fetchLunches(id); }}
+                loading={loadingLunches}
+              />
+            </div>
+
             <MealSection
-              title="Lunches" subtitle="Quick assembly — throw together in minutes"
+              title="Lunches" subtitle={lunchStyle ? LUNCH_STYLES.find((s) => s.id === lunchStyle)?.label || "" : "Quick assembly — throw together in minutes"}
               meals={lunchPlans} selectedMeals={selectedLunches} plannedMeals={plannedLunches}
               onToggle={(i) => setSelectedLunches((p) => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; })}
               onMealClick={handleMealClick} onDismiss={(i) => handleDismiss("lunch", i)}

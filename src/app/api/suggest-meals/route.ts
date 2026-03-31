@@ -5,8 +5,9 @@ import { parseJsonResponse } from "@/lib/parse-json";
 const client = new Anthropic();
 
 export async function POST(req: Request) {
-  const { items, type, dismissed } = await req.json();
+  const { items, type, dismissed, style } = await req.json();
   const dismissedList = (dismissed || []) as string[];
+  const stylePrompt = (style || null) as string | null;
 
   const freq: Record<string, number> = {};
   for (const item of items) {
@@ -60,7 +61,7 @@ CRITICAL RULES — read carefully:
 - Stick to proven dinner formats: tacos/burritos, stir fry, pasta, sheet pan, soup/chili, casserole, rice bowls
 - These are DINNER meal preps. Think one-pot, sheet pan, casseroles, bowls
 - Be creative and varied — don't just suggest taco bowls every time
-- ${theme}
+${stylePrompt ? `\nSPECIAL REQUEST: ${stylePrompt}` : `- ${theme}`}
 
 Her frequently purchased items: ${topItems}
 ${dismissedList.length > 0 ? `\nDO NOT suggest these meals (she already dismissed them): ${dismissedList.join(", ")}` : ""}`
@@ -80,7 +81,7 @@ CRITICAL RULES — read carefully:
 - Stick to proven lunch formats: deli wraps/sandwiches, salads with protein, snack/bento plates, grain bowls, soup + side
 - Think about what a real person would pack for work lunch
 - Be creative and varied — don't just suggest turkey wraps every time
-- ${theme}
+${stylePrompt ? `\nSPECIAL REQUEST: ${stylePrompt}` : `- ${theme}`}
 
 Her frequently purchased items: ${topItems}
 ${dismissedList.length > 0 ? `\nDO NOT suggest these meals (she already dismissed them): ${dismissedList.join(", ")}` : ""}`;
