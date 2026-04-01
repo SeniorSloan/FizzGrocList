@@ -16,29 +16,32 @@ export default function SavedRecipes({ recipes, favorites, onViewRecipe, onRemov
 
   if (hasNothing) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-20 h-20 bg-sand rounded-full flex items-center justify-center mb-5">
-          <span className="text-4xl">📖</span>
+      <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-up">
+        <div className="w-24 h-24 bg-accent-light rounded-3xl flex items-center justify-center mb-6 shadow-card">
+          <span className="text-5xl">📖</span>
         </div>
-        <h2 className="text-lg font-bold mb-1">No recipes yet</h2>
-        <p className="text-muted text-sm max-w-[260px]">
-          Build a grocery list from the Plan tab or search for something you&apos;re craving. Recipes and favorites show up here.
+        <h2 className="text-xl font-extrabold mb-2">No recipes yet</h2>
+        <p className="text-muted text-[14px] max-w-[260px] leading-relaxed">
+          Plan some meals or search for a craving. Your recipes and favorites will show up here.
         </p>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="pb-6">
+      <h2 className="text-2xl font-extrabold tracking-tight mb-6">Recipes</h2>
+
       {/* Favorites section */}
       {favorites.length > 0 && (
         <div className="mb-8">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-sm">♥</span>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-accent">Favorites</h2>
-            <span className="text-[10px] text-muted ml-auto">{favorites.length}</span>
+          <div className="flex items-center gap-2 mb-3 px-1">
+            <span className="text-accent text-base">♥</span>
+            <h3 className="text-[12px] font-bold uppercase tracking-widest text-accent">Favorites</h3>
+            <span className="text-[12px] font-bold text-accent bg-accent-light px-2 py-0.5 rounded-full">{favorites.length}</span>
+            <div className="flex-1 h-px bg-accent-light ml-2" />
           </div>
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {favorites.map((saved, i) => (
               <RecipeCard key={`fav-${i}`} saved={saved} onView={() => onViewRecipe(saved.recipe)}
                 onRemove={() => onRemoveFavorite(i)} removeLabel="Unfavorite" isFavorite />
@@ -50,15 +53,15 @@ export default function SavedRecipes({ recipes, favorites, onViewRecipe, onRemov
       {/* This Week */}
       {recipes.length > 0 && (
         <div>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
-              <span className="text-sm">📋</span>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted">This Week</h2>
-              <span className="text-[10px] text-muted">{recipes.length}</span>
+              <span className="text-base">📋</span>
+              <h3 className="text-[12px] font-bold uppercase tracking-widest text-muted">This Week</h3>
+              <span className="text-[12px] font-bold text-muted bg-sand px-2 py-0.5 rounded-full">{recipes.length}</span>
             </div>
-            <button onClick={onClearAll} className="text-xs text-muted hover:text-danger font-medium">Clear Week</button>
+            <button onClick={onClearAll} className="text-[12px] text-muted hover:text-danger font-semibold transition-colors">Clear All</button>
           </div>
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {recipes.map((saved, i) => (
               <RecipeCard key={`week-${i}`} saved={saved} onView={() => onViewRecipe(saved.recipe)}
                 onRemove={() => onRemove(i)} removeLabel="Remove" />
@@ -74,37 +77,39 @@ function RecipeCard({ saved, onView, onRemove, removeLabel, isFavorite }: {
   saved: SavedRecipe; onView: () => void; onRemove: () => void; removeLabel: string; isFavorite?: boolean;
 }) {
   return (
-    <div className="bg-card rounded-2xl shadow-soft overflow-hidden">
+    <div className="bg-card rounded-2xl shadow-card overflow-hidden transition-all hover:shadow-lifted animate-fade-up">
       <button onClick={onView}
-        className="w-full text-left p-4 hover:bg-sand/30 transition-colors active:bg-sand/50">
-        <div className="flex items-start justify-between">
-          <div className="min-w-0 pr-3">
+        className="w-full text-left p-4 active:bg-sand/30 transition-colors">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-[15px] leading-snug">{saved.recipe.title}</h3>
-              {isFavorite && <span className="text-accent text-xs">♥</span>}
+              <h3 className="font-bold text-[15px] leading-snug">{saved.recipe.title}</h3>
+              {isFavorite && <span className="text-accent text-sm">♥</span>}
             </div>
             {saved.recipe.description && (
-              <p className="text-[11px] text-muted mt-0.5 line-clamp-1">{saved.recipe.description}</p>
+              <p className="text-[12px] text-muted mt-1 line-clamp-1 leading-relaxed">{saved.recipe.description}</p>
             )}
-            <div className="flex gap-3 mt-1.5">
+            <div className="flex gap-4 mt-2">
               {[
-                { label: "Prep", value: saved.recipe.prepTime },
-                { label: "Cook", value: saved.recipe.cookTime },
-                { label: "Serves", value: String(saved.recipe.servings) },
+                { icon: "🕐", value: saved.recipe.prepTime, label: "prep" },
+                { icon: "🔥", value: saved.recipe.cookTime, label: "cook" },
+                { icon: "👩‍🍳", value: String(saved.recipe.servings), label: "servings" },
               ].map((m) => (
-                <span key={m.label} className="text-[11px] text-muted">
-                  <span className="font-semibold">{m.value}</span> {m.label.toLowerCase()}
+                <span key={m.label} className="text-[11px] text-muted font-medium">
+                  <span className="mr-0.5">{m.icon}</span> {m.value}
                 </span>
               ))}
             </div>
           </div>
-          <svg className="w-4 h-4 text-muted flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
+          <div className="w-9 h-9 rounded-xl bg-accent-light flex items-center justify-center flex-shrink-0">
+            <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
         </div>
       </button>
-      <div className="border-t border-border px-4 py-2 flex justify-end">
-        <button onClick={onRemove} className="text-xs text-muted hover:text-danger font-medium">{removeLabel}</button>
+      <div className="border-t border-border/50 px-4 py-2.5 flex justify-end">
+        <button onClick={onRemove} className="text-[12px] text-muted hover:text-danger font-semibold transition-colors">{removeLabel}</button>
       </div>
     </div>
   );

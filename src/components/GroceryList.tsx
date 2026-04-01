@@ -19,28 +19,38 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem }: {
   const [customItem, setCustomItem] = useState("");
   const [pasteMode, setPasteMode] = useState(false);
   const [pasteText, setPasteText] = useState("");
+  const [showChecked, setShowChecked] = useState(true);
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-20 h-20 bg-sand rounded-full flex items-center justify-center mb-5">
-          <span className="text-4xl">🛒</span>
+      <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-up">
+        <div className="w-24 h-24 bg-accent-light rounded-3xl flex items-center justify-center mb-6 shadow-card">
+          <span className="text-5xl">🛒</span>
         </div>
-        <h2 className="text-lg font-bold mb-1">Your list is empty</h2>
-        <p className="text-muted text-sm max-w-[260px] mb-6">
-          Pick meals from the Plan tab or add your go-to items below
+        <h2 className="text-xl font-extrabold mb-2">List is empty</h2>
+        <p className="text-muted text-[14px] max-w-[260px] mb-8 leading-relaxed">
+          Plan some meals or add items below to get started
         </p>
-        <div className="w-full max-w-sm mt-2">
+        <div className="w-full max-w-sm">
           <div className="flex gap-2">
             <input type="text" value={customItem} onChange={(e) => setCustomItem(e.target.value)}
-              placeholder="Add chips, snacks, anything..."
-              className="flex-1 text-sm bg-card shadow-soft rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent/30"
+              placeholder="Add an item..."
+              className="flex-1 text-[15px] bg-card shadow-card rounded-2xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:shadow-lifted transition-all"
               onKeyDown={(e) => { if (e.key === "Enter" && customItem.trim()) { onAddItem({ name: customItem.trim(), category: "Other", checked: false }); setCustomItem(""); } }}
             />
             <button onClick={() => { if (customItem.trim()) { onAddItem({ name: customItem.trim(), category: "Other", checked: false }); setCustomItem(""); } }}
-              className="bg-accent text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-button active:scale-95 transition-transform">
+              className="bg-accent text-white px-5 py-3.5 rounded-2xl text-sm font-bold shadow-button active:scale-95 transition-all">
               Add
             </button>
+          </div>
+          {/* Quick favorites */}
+          <div className="flex flex-wrap gap-2 mt-4 justify-center">
+            {FAVORITES.slice(0, 6).map((fav, i) => (
+              <button key={i} onClick={() => onAddItem({ ...fav, checked: false })}
+                className="text-[12px] bg-card text-muted px-3 py-1.5 rounded-xl shadow-soft font-medium hover:text-accent hover:shadow-card transition-all active:scale-95">
+                + {fav.name}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -59,47 +69,63 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem }: {
   const progress = items.length > 0 ? (checked.length / items.length) * 100 : 0;
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
+    <div className="pb-6">
+      {/* Header */}
+      <div className="flex items-end justify-between mb-5">
         <div>
-          <h2 className="text-lg font-bold">Grocery List</h2>
-          <p className="text-xs text-muted mt-0.5">
-            {unchecked.length} to get{checked.length > 0 ? ` · ${checked.length} in cart` : ""}
+          <h2 className="text-2xl font-extrabold tracking-tight">Grocery List</h2>
+          <p className="text-[13px] text-muted mt-1 font-medium">
+            {unchecked.length} item{unchecked.length !== 1 ? "s" : ""} to get
+            {checked.length > 0 ? ` \u00b7 ${checked.length} done` : ""}
           </p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => setShowAdd(!showAdd)}
-            className="text-xs bg-accent-light text-accent px-3 py-1.5 rounded-full font-semibold hover:bg-accent hover:text-white transition-all active:scale-95">
+            className={`text-[13px] px-4 py-2 rounded-2xl font-semibold transition-all active:scale-95 ${
+              showAdd ? "bg-accent text-white shadow-button" : "bg-card text-accent shadow-card"
+            }`}>
             + Add
           </button>
-          <button onClick={onClear} className="text-xs text-muted hover:text-danger font-medium px-2 py-1.5">Clear</button>
+          {items.length > 0 && (
+            <button onClick={onClear} className="text-[13px] text-muted hover:text-danger font-semibold px-2 py-2 transition-colors">
+              Clear
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Progress */}
-      <div className="bg-card rounded-2xl p-4 mb-5 shadow-soft">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-muted">Shopping progress</span>
-          <span className="text-xs font-bold text-accent">{Math.round(progress)}%</span>
+      {/* Progress bar */}
+      <div className="bg-card rounded-2xl p-4 mb-6 shadow-card">
+        <div className="flex items-center justify-between mb-2.5">
+          <span className="text-[12px] font-semibold text-muted">
+            {progress === 100 ? "All done! 🎉" : "Shopping progress"}
+          </span>
+          <span className="text-[13px] font-extrabold text-accent">{Math.round(progress)}%</span>
         </div>
-        <div className="h-2.5 bg-sand rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-accent to-pink-300 rounded-full transition-all duration-500"
-            style={{ width: `${progress}%` }} />
+        <div className="h-3 bg-sand rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-700 ease-out ${
+              progress === 100
+                ? "bg-gradient-to-r from-sage to-emerald-400"
+                : "bg-gradient-to-r from-accent to-pink-300"
+            }`}
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </div>
 
-      {/* Quick add */}
+      {/* Quick add panel */}
       {showAdd && (
-        <div className="bg-card rounded-2xl p-4 mb-5 shadow-soft">
-          {/* Toggle between single add and paste */}
+        <div className="bg-card rounded-2xl p-4 mb-6 shadow-card animate-fade-up">
+          {/* Mode toggle */}
           <div className="flex gap-2 mb-3">
             <button onClick={() => setPasteMode(false)}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all ${!pasteMode ? "bg-accent text-white" : "bg-sand text-muted"}`}>
+              className={`text-[13px] font-semibold px-4 py-2 rounded-xl transition-all ${!pasteMode ? "bg-accent text-white shadow-button" : "bg-sand text-muted"}`}>
               Single Item
             </button>
             <button onClick={() => setPasteMode(true)}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all ${pasteMode ? "bg-accent text-white" : "bg-sand text-muted"}`}>
-              Paste a List
+              className={`text-[13px] font-semibold px-4 py-2 rounded-xl transition-all ${pasteMode ? "bg-accent text-white shadow-button" : "bg-sand text-muted"}`}>
+              Paste List
             </button>
           </div>
 
@@ -107,18 +133,18 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem }: {
             <>
               <div className="flex gap-2 mb-3">
                 <input type="text" value={customItem} onChange={(e) => setCustomItem(e.target.value)}
-                  placeholder="Add anything..."
-                  className="flex-1 text-sm bg-sand rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent/30"
+                  placeholder="What do you need?"
+                  className="flex-1 text-[15px] bg-sand rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent/20"
                   autoFocus
                   onKeyDown={(e) => { if (e.key === "Enter" && customItem.trim()) { onAddItem({ name: customItem.trim(), category: "Other", checked: false }); setCustomItem(""); } }}
                 />
                 <button onClick={() => { if (customItem.trim()) { onAddItem({ name: customItem.trim(), category: "Other", checked: false }); setCustomItem(""); } }}
-                  className="bg-accent text-white px-4 py-2.5 rounded-xl text-sm font-semibold active:scale-95 transition-transform">Add</button>
+                  className="bg-accent text-white px-5 py-3 rounded-xl text-sm font-bold active:scale-95 transition-all shadow-button">Add</button>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {FAVORITES.filter((f) => !existingNames.has(f.name.toLowerCase())).slice(0, 10).map((fav, i) => (
                   <button key={i} onClick={() => onAddItem({ ...fav, checked: false })}
-                    className="text-[11px] bg-sand text-muted px-2.5 py-1 rounded-full hover:text-accent transition-colors">
+                    className="text-[12px] bg-sand text-muted px-3 py-1.5 rounded-lg font-medium hover:text-accent hover:bg-accent-light transition-all active:scale-95">
                     + {fav.name}
                   </button>
                 ))}
@@ -127,14 +153,14 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem }: {
           ) : (
             <>
               <textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)}
-                placeholder={"Paste a grocery list here...\ne.g.\nchicken breast\nbroccoli\nrice\navocados"}
-                className="w-full h-32 text-sm bg-sand rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-accent/30 mb-3"
+                placeholder={"Paste your list here...\ne.g.\nchicken breast\nbroccoli\nrice\navocados"}
+                className="w-full h-36 text-[14px] bg-sand rounded-xl px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-accent/20 mb-3 leading-relaxed"
                 autoFocus />
               <button onClick={() => {
                 if (!pasteText.trim()) return;
                 const parsed = pasteText
                   .split(/[\n,]+/)
-                  .map((line) => line.replace(/^[-•*\[\]x\s]+/i, "").trim())
+                  .map((line) => line.replace(/^[-\u2022*\[\]x\s]+/i, "").trim())
                   .filter((line) => line.length > 0 && line.length < 80);
                 for (const item of parsed) {
                   if (!existingNames.has(item.toLowerCase())) {
@@ -143,8 +169,9 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem }: {
                 }
                 setPasteText("");
                 setPasteMode(false);
+                setShowAdd(false);
               }}
-                className="w-full bg-accent text-white py-3 rounded-xl text-sm font-semibold active:scale-[0.98] transition-transform">
+                className="w-full bg-accent text-white py-3.5 rounded-xl text-sm font-bold active:scale-[0.98] transition-all shadow-button">
                 Add All Items
               </button>
             </>
@@ -153,20 +180,23 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem }: {
       )}
 
       {/* Items by aisle */}
-      <div className="space-y-5">
+      <div className="space-y-6">
         {Object.entries(grouped).map(([category, entries]) => (
-          <div key={category}>
-            <div className="flex items-center gap-1.5 mb-2 px-1">
-              <span className="text-sm">{AISLE_EMOJI[category] || "📦"}</span>
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted">{category}</h3>
-              <span className="text-[10px] text-muted ml-auto">{entries.length}</span>
+          <div key={category} className="animate-fade-up">
+            <div className="flex items-center gap-2 mb-2.5 px-1">
+              <span className="text-base">{AISLE_EMOJI[category] || "📦"}</span>
+              <h3 className="text-[12px] font-bold uppercase tracking-widest text-muted">{category}</h3>
+              <div className="flex-1 h-px bg-border ml-2" />
+              <span className="text-[11px] text-muted/60 font-semibold">{entries.length}</span>
             </div>
-            <div className="bg-card rounded-2xl shadow-soft overflow-hidden divide-y divide-border">
-              {entries.map(({ item, index }) => (
+            <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+              {entries.map(({ item, index }, entryIdx) => (
                 <button key={index} onClick={() => onToggle(index)}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-sand/50 active:bg-sand">
-                  <div className="w-6 h-6 rounded-full border-2 border-gray-300 flex-shrink-0" />
-                  <span className="text-[15px]">{item.name}</span>
+                  className={`w-full flex items-center gap-3.5 px-4 py-4 text-left transition-all active:bg-accent-light/50 ${
+                    entryIdx < entries.length - 1 ? "border-b border-border/50" : ""
+                  }`}>
+                  <div className="w-7 h-7 rounded-xl border-2 border-border flex-shrink-0 transition-all hover:border-accent/40" />
+                  <span className="text-[15px] font-medium">{item.name}</span>
                 </button>
               ))}
             </div>
@@ -174,27 +204,39 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem }: {
         ))}
       </div>
 
-      {/* Checked */}
+      {/* Checked / In Cart */}
       {checked.length > 0 && (
-        <div className="mt-6">
-          <div className="flex items-center gap-1.5 mb-2 px-1">
-            <span className="text-sm">✅</span>
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted">In Cart</h3>
-            <span className="text-[10px] text-muted ml-auto">{checked.length}</span>
-          </div>
-          <div className="bg-card/60 rounded-2xl shadow-soft overflow-hidden divide-y divide-border">
-            {checked.map(({ item, index }) => (
-              <button key={index} onClick={() => onToggle(index)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-sand/30">
-                <div className="w-6 h-6 rounded-full bg-sage border-2 border-sage flex items-center justify-center flex-shrink-0">
-                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-[15px] text-muted line-through">{item.name}</span>
-              </button>
-            ))}
-          </div>
+        <div className="mt-8">
+          <button
+            onClick={() => setShowChecked(!showChecked)}
+            className="flex items-center gap-2 mb-3 px-1 w-full"
+          >
+            <div className="w-6 h-6 rounded-full bg-sage/10 flex items-center justify-center">
+              <svg className={`w-3 h-3 text-sage transition-transform duration-200 ${showChecked ? "rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+            <h3 className="text-[12px] font-bold uppercase tracking-widest text-sage">In Cart</h3>
+            <span className="text-[12px] font-bold text-sage bg-sage-light px-2 py-0.5 rounded-full">{checked.length}</span>
+            <div className="flex-1 h-px bg-sage/10 ml-2" />
+          </button>
+          {showChecked && (
+            <div className="bg-card/60 rounded-2xl shadow-soft overflow-hidden">
+              {checked.map(({ item, index }, entryIdx) => (
+                <button key={index} onClick={() => onToggle(index)}
+                  className={`w-full flex items-center gap-3.5 px-4 py-3.5 text-left transition-all active:bg-sand/50 ${
+                    entryIdx < checked.length - 1 ? "border-b border-border/30" : ""
+                  }`}>
+                  <div className="w-7 h-7 rounded-xl bg-sage flex items-center justify-center flex-shrink-0">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-[15px] text-muted line-through decoration-muted/30">{item.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -66,7 +66,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [pastLists] = useState<PastList[]>(seedLists);
 
-  // Cached meal suggestions — persist between visits
+  // Cached meal suggestions
   const [dinnerPlans, setDinnerPlans] = useLocalStorage<MealPlan[]>("fizz-cached-dinners", []);
   const [lunchPlans, setLunchPlans] = useLocalStorage<MealPlan[]>("fizz-cached-lunches", []);
   const [selectedDinners, setSelectedDinners] = useState<Set<number>>(new Set());
@@ -93,7 +93,6 @@ function App() {
   const allItems = pastLists.flatMap((l) => l.items);
   const inStockPantry = pantryItems.filter((p) => p.inStock).map((p) => p.name);
 
-  // Only fetch on first visit if no cached suggestions exist
   useEffect(() => {
     if (pastLists.length > 0 && dinnerPlans.length === 0) fetchDinners();
     if (pastLists.length > 0 && lunchPlans.length === 0) fetchLunches();
@@ -108,7 +107,6 @@ function App() {
       ? styleOverride
       : type === "dinner" ? dinnerStyle : lunchStyle;
 
-    // Find the style prompt
     const styles = type === "dinner" ? DINNER_STYLES : LUNCH_STYLES;
     const stylePrompt = currentStyle ? styles.find((s) => s.id === currentStyle)?.prompt : null;
 
@@ -139,13 +137,10 @@ function App() {
     });
   };
 
-  // Recipe cache — avoid re-fetching the same recipe
   const [recipeCache, setRecipeCache] = useLocalStorage<Record<string, Recipe>>("fizz-recipe-cache", {});
 
   const handleMealClick = async (meal: MealPlan) => {
     setAddedToList(false);
-
-    // Check cache first (also check saved recipes and favorites)
     const cached = recipeCache[meal.name]
       || savedRecipes.find((r) => r.mealName === meal.name)?.recipe
       || favoriteRecipes.find((r) => r.mealName === meal.name)?.recipe;
@@ -164,7 +159,6 @@ function App() {
       const data = await res.json();
       if (data.recipe) {
         setActiveRecipe(data.recipe);
-        // Cache it
         setRecipeCache((prev) => ({ ...prev, [meal.name]: data.recipe }));
       }
     } catch (e) { console.error(e); }
@@ -173,7 +167,6 @@ function App() {
 
   const handleAddRecipeToList = (scaledIngredients?: string[]) => {
     if (!activeRecipe) return;
-    // Use scaled ingredients if provided, otherwise use original
     const recipeToAdd = scaledIngredients
       ? { ...activeRecipe, ingredients: scaledIngredients }
       : activeRecipe;
@@ -188,19 +181,15 @@ function App() {
     setAddedToList(true);
   };
 
-  // When user picks a search option, fetch the full recipe
   const handleSearchOptionPicked = async (option: { name: string; description: string; ingredients: string[] }) => {
     setLoadingSearch(true);
     setAddedToList(false);
-
-    // Check cache first
     const cached = recipeCache[option.name];
     if (cached) {
       setActiveRecipe(cached);
       setLoadingSearch(false);
       return;
     }
-
     try {
       const res = await fetch("/api/get-recipe", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -238,7 +227,6 @@ function App() {
     if (selectedMeals.length === 0) return;
     setLoadingList(true);
     try {
-      // Step 1: Fetch recipes — use cache when available, only call API for uncached
       const recipePromises = selectedMeals.map(async (meal) => {
         const cached = recipeCache[meal.name]
           || savedRecipes.find((r) => r.mealName === meal.name)?.recipe
@@ -247,7 +235,6 @@ function App() {
         if (cached) {
           return { recipe: cached, mealName: meal.name, addedAt: new Date().toISOString() };
         }
-
         try {
           const res = await fetch("/api/get-recipe", {
             method: "POST", headers: { "Content-Type": "application/json" },
@@ -262,19 +249,13 @@ function App() {
         return null;
       });
       const newRecipes = (await Promise.all(recipePromises)).filter(Boolean) as SavedRecipe[];
-
-      // Step 2: Build grocery list CLIENT-SIDE from recipe ingredients (no Claude call!)
       const recipes = newRecipes.map((r) => r.recipe);
       const newList = buildGroceryList(recipes, inStockPantry);
       setGroceryList(newList);
-
-      // Step 3: Save recipes
       setSavedRecipes((prev) => {
         const existingTitles = new Set(prev.map((r) => r.recipe.title));
         return [...prev, ...newRecipes.filter((r) => !existingTitles.has(r.recipe.title))];
       });
-
-      // Step 4: Mark meals as planned and clear selections
       setPlannedDinners(Array.from(selectedDinners).map((i) => dinnerPlans[i].name));
       setPlannedLunches(Array.from(selectedLunches).map((i) => lunchPlans[i].name));
       setSelectedDinners(new Set());
@@ -286,70 +267,40 @@ function App() {
 
   const uncheckedCount = groceryList.filter((i) => !i.checked).length;
 
-  const tabs: { key: Tab; label: string; icon: string; badge?: number }[] = [
-    { key: "home", label: "Plan", icon: "✨" },
-    { key: "grocery", label: "List", icon: "🛒", badge: uncheckedCount || undefined },
-    { key: "recipes", label: "Recipes", icon: "📖", badge: (savedRecipes.length + favoriteRecipes.length) || undefined },
-    { key: "pantry", label: "Pantry", icon: "🏠" },
+  const tabs: { key: Tab; label: string; icon: string; activeIcon: string; badge?: number }[] = [
+    { key: "home", label: "Plan", icon: "✨", activeIcon: "✨" },
+    { key: "grocery", label: "List", icon: "🛒", activeIcon: "🛒", badge: uncheckedCount || undefined },
+    { key: "recipes", label: "Recipes", icon: "📖", activeIcon: "📖", badge: (savedRecipes.length + favoriteRecipes.length) || undefined },
+    { key: "pantry", label: "Pantry", icon: "🏠", activeIcon: "🏠" },
   ];
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card shadow-soft px-5 pt-5 pb-3">
-        <div className="max-w-lg mx-auto">
-          <h1 className="text-xl font-bold text-foreground tracking-tight">FizzGrocList</h1>
-          <p className="text-xs text-muted mt-0.5">Smart grocery planning</p>
-        </div>
-      </header>
-
-      {/* Nav */}
-      <nav className="bg-card/80 backdrop-blur-xl shadow-soft sticky top-0 z-30">
-        <div className="max-w-lg mx-auto flex items-center justify-around h-14">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`relative flex flex-col items-center gap-0.5 px-4 py-1.5 transition-colors ${
-                activeTab === tab.key ? "text-accent" : "text-muted"
-              }`}
-            >
-              <span className="text-lg leading-none">{tab.icon}</span>
-              <span className={`text-[10px] font-semibold ${activeTab === tab.key ? "text-accent" : ""}`}>
-                {tab.label}
-              </span>
-              {tab.badge && tab.badge > 0 && (
-                <span className="absolute -top-0.5 right-1 w-4 h-4 bg-accent text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                  {tab.badge > 9 ? "9+" : tab.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </nav>
-
+      {/* Loading bar */}
       {loadingList && (
-        <div className="h-1 bg-accent-light overflow-hidden">
-          <div className="h-full bg-accent rounded-full animate-[pulse_1s_ease-in-out_infinite] w-2/3" />
+        <div className="fixed top-0 left-0 right-0 h-1 bg-accent-light overflow-hidden z-50">
+          <div className="h-full bg-gradient-to-r from-accent to-pink-300 rounded-full animate-[shimmer_1.5s_ease-in-out_infinite]"
+            style={{ width: "70%", backgroundSize: "200% 100%" }} />
         </div>
       )}
 
-      <main className="flex-1 max-w-lg mx-auto w-full px-4 py-6">
+      <main className="flex-1 max-w-md mx-auto w-full px-5 pt-6 pb-28">
         {activeTab === "home" && (
-          <div className="pb-24">
-            {/* Craving search */}
-            <CravingSearch onOptionPicked={handleSearchOptionPicked} loading={loadingSearch} />
-
+          <div>
+            {/* Page title */}
             <div className="mb-6">
-              <h2 className="text-lg font-bold tracking-tight">Plan Your Week</h2>
-              <p className="text-xs text-muted mt-1">
-                Pick meals, then build your grocery list. Tap any meal for the full recipe.
+              <h1 className="text-2xl font-extrabold tracking-tight">Plan Your Week</h1>
+              <p className="text-[13px] text-muted mt-1 font-medium">
+                Pick meals, build your list. Tap any meal for the recipe.
               </p>
             </div>
 
+            {/* Craving search */}
+            <CravingSearch onOptionPicked={handleSearchOptionPicked} loading={loadingSearch} />
+
             {/* Dinner style picker */}
             <div className="mb-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-2">What kind of dinners?</h3>
+              <h3 className="text-[12px] font-bold uppercase tracking-widest text-muted mb-3 px-1">Dinner Vibe</h3>
               <StylePicker
                 styles={DINNER_STYLES}
                 selected={dinnerStyle}
@@ -359,7 +310,7 @@ function App() {
             </div>
 
             <MealSection
-              title="Dinners" subtitle={dinnerStyle ? DINNER_STYLES.find((s) => s.id === dinnerStyle)?.label || "" : "Meal prep — cook once, eat for days"}
+              title="Dinners" subtitle={dinnerStyle ? DINNER_STYLES.find((s) => s.id === dinnerStyle)?.label || "" : "Cook once, eat for days"}
               meals={dinnerPlans} selectedMeals={selectedDinners} plannedMeals={plannedDinners}
               onToggle={(i) => setSelectedDinners((p) => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; })}
               onMealClick={handleMealClick} onDismiss={(i) => handleDismiss("dinner", i)}
@@ -368,7 +319,7 @@ function App() {
 
             {/* Lunch style picker */}
             <div className="mb-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-2">What kind of lunches?</h3>
+              <h3 className="text-[12px] font-bold uppercase tracking-widest text-muted mb-3 px-1">Lunch Vibe</h3>
               <StylePicker
                 styles={LUNCH_STYLES}
                 selected={lunchStyle}
@@ -378,7 +329,7 @@ function App() {
             </div>
 
             <MealSection
-              title="Lunches" subtitle={lunchStyle ? LUNCH_STYLES.find((s) => s.id === lunchStyle)?.label || "" : "Quick assembly — throw together in minutes"}
+              title="Lunches" subtitle={lunchStyle ? LUNCH_STYLES.find((s) => s.id === lunchStyle)?.label || "" : "Quick assembly, throw together in minutes"}
               meals={lunchPlans} selectedMeals={selectedLunches} plannedMeals={plannedLunches}
               onToggle={(i) => setSelectedLunches((p) => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; })}
               onMealClick={handleMealClick} onDismiss={(i) => handleDismiss("lunch", i)}
@@ -414,16 +365,59 @@ function App() {
 
       {/* Sticky build button */}
       {activeTab === "home" && totalSelected > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-xl px-4 py-3 z-40">
-          <div className="max-w-lg mx-auto">
+        <div className="fixed bottom-20 left-0 right-0 px-5 z-40 animate-fade-up">
+          <div className="max-w-md mx-auto">
             <button onClick={handleBuildList} disabled={loadingList}
-              className="w-full bg-accent text-white py-4 rounded-full text-sm font-bold hover:bg-accent-dark transition-all disabled:opacity-50 shadow-button active:scale-[0.98]"
+              className="w-full bg-accent text-white py-4 rounded-2xl text-[15px] font-bold hover:bg-accent-dark transition-all disabled:opacity-50 shadow-button active:scale-[0.98]"
             >
-              {loadingList ? "Building list & saving recipes..." : `Build Grocery List & Save Recipes (${totalSelected})`}
+              {loadingList ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Building list...
+                </span>
+              ) : (
+                `Build List & Save Recipes (${totalSelected})`
+              )}
             </button>
           </div>
         </div>
       )}
+
+      {/* Bottom tab bar */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-glass backdrop-blur-xl border-t border-border/50 z-30 safe-bottom">
+        <div className="max-w-md mx-auto flex items-center justify-around h-16">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className="relative flex flex-col items-center gap-0.5 px-5 py-2 transition-all active:scale-90"
+              >
+                <div className="relative">
+                  <span className={`text-xl leading-none transition-all ${isActive ? "scale-110" : "grayscale-[30%] opacity-70"}`}
+                    style={{ display: "inline-block", transform: isActive ? "scale(1.1)" : "scale(1)" }}>
+                    {isActive ? tab.activeIcon : tab.icon}
+                  </span>
+                  {tab.badge && tab.badge > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 animate-bounce-in">
+                      {tab.badge > 99 ? "99+" : tab.badge}
+                    </span>
+                  )}
+                </div>
+                <span className={`text-[11px] font-semibold transition-colors ${
+                  isActive ? "text-accent" : "text-muted/70"
+                }`}>
+                  {tab.label}
+                </span>
+                {isActive && (
+                  <div className="absolute -bottom-0.5 w-6 h-1 bg-accent rounded-full" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
 
       {activeRecipe && (
         <RecipeModal recipe={activeRecipe} onClose={() => setActiveRecipe(null)}

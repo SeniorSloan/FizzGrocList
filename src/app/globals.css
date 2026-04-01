@@ -1,21 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fdf7f8;
-  --foreground: #2d2a2b;
-  --accent: #d4748c;
-  --accent-light: #fce4ec;
-  --accent-dark: #b85a70;
+  --background: #fafafa;
+  --foreground: #1a1a1a;
+  --accent: #e0728b;
+  --accent-light: #fdf0f3;
+  --accent-dark: #c75d76;
+  --accent-glow: rgba(224, 114, 139, 0.15);
   --card: #ffffff;
-  --border: #f3e8ea;
-  --muted: #9a8e90;
-  --sand: #f9f0f2;
-  --sage: #7db88a;
-  --sage-light: #e8f5eb;
-  --warm: #fef0e8;
+  --border: #f0eded;
+  --muted: #8c8488;
+  --sand: #f7f3f4;
+  --sage: #5cb87b;
+  --sage-light: #eef8f1;
+  --warm: #fff8f3;
   --warm-dark: #d4a574;
-  --danger: #d64545;
-  --danger-light: #fce8e3;
+  --danger: #e54d4d;
+  --danger-light: #fef0ee;
+  --glass: rgba(255, 255, 255, 0.72);
 }
 
 @theme inline {
@@ -24,6 +26,7 @@
   --color-accent: var(--accent);
   --color-accent-light: var(--accent-light);
   --color-accent-dark: var(--accent-dark);
+  --color-accent-glow: var(--accent-glow);
   --color-card: var(--card);
   --color-border: var(--border);
   --color-muted: var(--muted);
@@ -34,11 +37,14 @@
   --color-warm-dark: var(--warm-dark);
   --color-danger: var(--danger);
   --color-danger-light: var(--danger-light);
+  --color-glass: var(--glass);
   --font-sans: var(--font-dm-sans);
-  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-lifted: 0 4px 12px rgba(0, 0, 0, 0.06);
-  --shadow-modal: 0 8px 30px rgba(0, 0, 0, 0.12);
-  --shadow-button: 0 2px 8px rgba(212, 116, 140, 0.3);
+  --shadow-soft: 0 1px 4px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-lifted: 0 8px 24px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.03);
+  --shadow-modal: 0 -4px 32px rgba(0, 0, 0, 0.10);
+  --shadow-button: 0 4px 14px rgba(224, 114, 139, 0.35);
+  --shadow-glow: 0 0 0 4px rgba(224, 114, 139, 0.1);
 }
 
 body {
@@ -46,19 +52,103 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+/* Hide scrollbars but keep functionality */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
+::-webkit-scrollbar { width: 0px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: transparent; }
+
+/* Animations */
 @keyframes checkmark {
-  0% { transform: scale(0); opacity: 0; }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); opacity: 1; }
+  0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+  50% { transform: scale(1.3) rotate(0deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
-.animate-check { animation: checkmark 0.25s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+.animate-check { animation: checkmark 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--sand) 25%, var(--accent-light) 50%, var(--sand) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+@keyframes bounce-in {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.15); }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+.animate-bounce-in { animation: bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+@keyframes strikethrough {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* Satisfying grocery check-off */
+.grocery-checked .strike-line {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 1.5px;
+  background: var(--muted);
+  animation: strikethrough 0.3s ease-out forwards;
+}
+
+/* Bottom sheet overlay */
+.overlay-blur {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Safe area for notched phones */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* Active press states */
+.press-scale {
+  transition: transform 0.1s ease;
+}
+.press-scale:active {
+  transform: scale(0.97);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent), #f4a0b5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
