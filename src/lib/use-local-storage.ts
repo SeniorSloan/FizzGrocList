@@ -1,31 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+
+function getStoredValue<T>(key: string, initialValue: T): T {
+  if (typeof window === "undefined") return initialValue;
+  try {
+    const item = window.localStorage.getItem(key);
+    if (item) return JSON.parse(item);
+  } catch {
+    // ignore
+  }
+  return initialValue;
+}
 
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((prev: T) => T)) => void] {
-  const [storedValue, setStoredValue] = useState<T>(initialValue);
-  const [hydrated, setHydrated] = useState(false);
+  // Initialize directly from localStorage — no hydration gap
+  const [storedValue, setStoredValue] = useState<T>(() => getStoredValue(key, initialValue));
 
-  // Load from localStorage on mount
+  // Persist to localStorage whenever value changes
   useEffect(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      if (item) setStoredValue(JSON.parse(item));
-    } catch {
-      // ignore
-    }
-    setHydrated(true);
-  }, [key]);
-
-  // Save to localStorage on change (after hydration)
-  useEffect(() => {
-    if (!hydrated) return;
     try {
       window.localStorage.setItem(key, JSON.stringify(storedValue));
     } catch {
-      // ignore
+      // ignore — quota exceeded, etc.
     }
-  }, [key, storedValue, hydrated]);
+  }, [key, storedValue]);
 
-  return [storedValue, setStoredValue];
+  // Stable setter that supports function updates
+  const setValue = useCallback((value: T | ((prev: T) => T)) => {
+    setStoredValue(value);
+  }, []);
+
+  return [storedValue, setValue];
 }
