@@ -70,10 +70,11 @@ ${dismissedList.length > 0 ? `- DO NOT suggest: ${dismissedList.join(", ")}` : "
 
 Her style:
 - Loves Mexican-inspired food (tacos, enchiladas, taco bowls, burritos)
-- Big on lean protein: ground turkey, chicken breast, salmon pouches
+- Big on lean protein: ground turkey, ground beef, chicken breast, salmon, tilapia, shrimp, tuna
 - Buys Annie's/Goodles protein mac, cauliflower pizza for easy nights
 - NOT a fancy cook — simple, practical, satisfying
 - Likes big batch meals she can portion out
+- Include some fish/seafood options sometimes — she buys salmon, tilapia, shrimp, cod
 
 Rules:
 - Every meal must be a REAL recipe a normal person would cook

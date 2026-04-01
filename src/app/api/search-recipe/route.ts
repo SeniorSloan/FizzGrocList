@@ -10,6 +10,7 @@ export async function POST(req: Request) {
   const message = await client.messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 2048,
+    temperature: 0.8,
     messages: [
       {
         role: "user",
@@ -17,19 +18,16 @@ export async function POST(req: Request) {
 
 She shops at HEB and Trader Joe's. She typically buys: ${(shoppingHistory || []).slice(0, 25).join(", ")}
 
-Create a recipe that satisfies her craving while keeping it relatively healthy and using ingredients she'd normally buy. Make it practical and not too complicated.
+Suggest 4 DIFFERENT recipe options that satisfy this craving. Each should be a distinctly different take — vary the protein, cooking style, or cuisine. Make them practical and healthy-ish.
 
-Return a JSON object with:
-- "title": recipe name
-- "description": one sentence about the dish
-- "prepTime": prep time (e.g. "10 min")
-- "cookTime": cook time (e.g. "20 min")
-- "servings": number
-- "ingredients": array of strings with quantities (e.g. "1 lb ground turkey")
-- "steps": array of instruction strings
-- "tips": one short tip or variation
+IMPORTANT: These should be REAL well-known recipes, not weird mashups. If she says "chicken salad" she means an actual chicken salad recipe — not just chicken placed on lettuce. If she says "tacos" give her real taco recipes with proper seasoning and toppings.
 
-Only return the JSON object, no other text.`,
+Return a JSON array of 4 objects, each with:
+- "name": recipe name
+- "description": one sentence about what makes this version unique
+- "ingredients": array of 4-6 key ingredients (just names, no quantities)
+
+Only return the JSON array, no other text.`,
       },
     ],
   });
@@ -37,10 +35,10 @@ Only return the JSON object, no other text.`,
   const text =
     message.content[0].type === "text" ? message.content[0].text : "";
   try {
-    const recipe = parseJsonResponse(text);
-    return NextResponse.json({ recipe });
+    const options = parseJsonResponse(text);
+    return NextResponse.json({ options });
   } catch {
-    console.error("Failed to parse search recipe:", text);
-    return NextResponse.json({ recipe: null });
+    console.error("Failed to parse search results:", text);
+    return NextResponse.json({ options: [] });
   }
 }

@@ -171,10 +171,13 @@ function App() {
     setLoadingRecipe(null);
   };
 
-  const handleAddRecipeToList = () => {
+  const handleAddRecipeToList = (scaledIngredients?: string[]) => {
     if (!activeRecipe) return;
-    // Build a fresh list from just this recipe, then merge with existing
-    const recipeItems = buildGroceryList([activeRecipe], inStockPantry);
+    // Use scaled ingredients if provided, otherwise use original
+    const recipeToAdd = scaledIngredients
+      ? { ...activeRecipe, ingredients: scaledIngredients }
+      : activeRecipe;
+    const recipeItems = buildGroceryList([recipeToAdd], inStockPantry);
     const existingNames = new Set(groceryList.map((i) => i.name.toLowerCase()));
     const newItems = recipeItems.filter((item) => !existingNames.has(item.name.toLowerCase()));
     setGroceryList((prev) => [...prev, ...newItems]);
@@ -185,17 +188,28 @@ function App() {
     setAddedToList(true);
   };
 
-  const handleCravingSearch = async (query: string) => {
+  // When user picks a search option, fetch the full recipe
+  const handleSearchOptionPicked = async (option: { name: string; description: string; ingredients: string[] }) => {
     setLoadingSearch(true);
+    setAddedToList(false);
+
+    // Check cache first
+    const cached = recipeCache[option.name];
+    if (cached) {
+      setActiveRecipe(cached);
+      setLoadingSearch(false);
+      return;
+    }
+
     try {
-      const res = await fetch("/api/search-recipe", {
+      const res = await fetch("/api/get-recipe", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, shoppingHistory: allItems }),
+        body: JSON.stringify({ meal: option }),
       });
       const data = await res.json();
       if (data.recipe) {
         setActiveRecipe(data.recipe);
-        setAddedToList(false);
+        setRecipeCache((prev) => ({ ...prev, [option.name]: data.recipe }));
       }
     } catch (e) { console.error(e); }
     setLoadingSearch(false);
@@ -324,7 +338,7 @@ function App() {
         {activeTab === "home" && (
           <div className="pb-24">
             {/* Craving search */}
-            <CravingSearch onRecipeFound={handleCravingSearch} loading={loadingSearch} />
+            <CravingSearch onOptionPicked={handleSearchOptionPicked} loading={loadingSearch} />
 
             <div className="mb-6">
               <h2 className="text-lg font-bold tracking-tight">Plan Your Week</h2>
