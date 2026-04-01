@@ -10,7 +10,7 @@ type Recipe = {
   ingredients: string[];
 };
 
-const SPICE_PATTERN = /\b(salt|pepper|olive oil|cooking oil|cooking spray|cumin|paprika|garlic powder|onion powder|chili powder|italian seasoning|red pepper flakes|cinnamon|soy sauce|hot sauce|buffalo sauce|flour|baking powder|vanilla extract|oregano|dried oregano|brown sugar|honey|sugar)\b/i;
+const SPICE_PATTERN = /\b(salt|pepper|olive oil|cooking oil|cooking spray|cumin|paprika|garlic powder|onion powder|chili powder|italian seasoning|red pepper flakes|cinnamon|soy sauce|hot sauce|buffalo sauce|flour|baking powder|vanilla extract|oregano|dried oregano|brown sugar|honey|sugar|water|ice)\b/i;
 
 const SKIP_PHRASES = [
   "salt and pepper",
@@ -20,6 +20,16 @@ const SKIP_PHRASES = [
   "for serving",
   "for garnish",
   "optional",
+  "cup of water",
+  "cups of water",
+  "water",
+  "ice cubes",
+  "ice",
+  "nonstick spray",
+  "cooking spray",
+  "parchment paper",
+  "aluminum foil",
+  "toothpicks",
 ];
 
 /**
