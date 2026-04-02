@@ -10,31 +10,30 @@
     "Cumin",
     "Italian seasoning",
     "Red pepper flakes",
-    "Cinnamon"
+    "Cinnamon",
+    "Oregano"
   ],
-  "oils_and_vinegars": [
+  "oils_and_sauces": [
     "Olive oil",
     "Cooking spray",
     "Soy sauce",
     "Hot sauce",
-    "Buffalo sauce"
+    "Buffalo sauce",
+    "Vinegar",
+    "Sesame oil"
   ],
-  "pantry_staples": [
-    "Rice",
-    "Pasta",
-    "Chicken broth",
-    "Canned black beans",
-    "Canned white beans",
-    "Enchilada sauce",
-    "Diced green chilies",
-    "Rotel",
-    "Pasta sauce",
-    "Honey",
-    "Brown sugar"
-  ],
-  "baking": [
+  "baking_and_sweeteners": [
     "Flour",
     "Baking powder",
-    "Vanilla extract"
+    "Vanilla extract",
+    "Sugar",
+    "Brown sugar",
+    "Honey"
+  ],
+  "kitchen_supplies": [
+    "Parchment paper",
+    "Aluminum foil",
+    "Plastic wrap",
+    "Ziploc bags"
   ]
 }

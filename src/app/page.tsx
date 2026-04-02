@@ -40,9 +40,9 @@ function buildInitialPantry(): PantryItem[] {
   const items: PantryItem[] = [];
   const categoryMap: Record<string, string> = {
     spices: "Spices & Seasonings",
-    oils_and_vinegars: "Oils & Sauces",
-    pantry_staples: "Pantry Staples",
-    baking: "Baking",
+    oils_and_sauces: "Oils & Sauces",
+    baking_and_sweeteners: "Baking & Sweeteners",
+    kitchen_supplies: "Kitchen Supplies",
   };
   for (const [key, list] of Object.entries(pantryDefaults)) {
     for (const name of list) {
@@ -84,6 +84,7 @@ function App() {
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
   const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
+  const [loadingFullRecipe, setLoadingFullRecipe] = useState(false);
   const [addedToList, setAddedToList] = useState(false);
   const [plannedDinners, setPlannedDinners] = useState<string[]>([]);
   const [plannedLunches, setPlannedLunches] = useState<string[]>([]);
@@ -150,7 +151,9 @@ function App() {
       return;
     }
 
+    // Show loading modal immediately
     setLoadingRecipe(meal.name);
+    setLoadingFullRecipe(true);
     try {
       const res = await fetch("/api/get-recipe", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -163,6 +166,7 @@ function App() {
       }
     } catch (e) { console.error(e); }
     setLoadingRecipe(null);
+    setLoadingFullRecipe(false);
   };
 
   const handleAddRecipeToList = (scaledIngredients?: string[]) => {
@@ -182,14 +186,19 @@ function App() {
   };
 
   const handleSearchOptionPicked = async (option: { name: string; description: string; ingredients: string[] }) => {
-    setLoadingSearch(true);
     setAddedToList(false);
+
+    // Check cache first
     const cached = recipeCache[option.name];
     if (cached) {
       setActiveRecipe(cached);
-      setLoadingSearch(false);
       return;
     }
+
+    // Show modal immediately with loading state
+    setActiveRecipe(null);
+    setLoadingFullRecipe(true);
+
     try {
       const res = await fetch("/api/get-recipe", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -201,7 +210,7 @@ function App() {
         setRecipeCache((prev) => ({ ...prev, [option.name]: data.recipe }));
       }
     } catch (e) { console.error(e); }
-    setLoadingSearch(false);
+    setLoadingFullRecipe(false);
   };
 
   const isRecipeFavorited = (recipe: Recipe) =>
@@ -343,6 +352,8 @@ function App() {
             onToggle={(i) => setGroceryList((prev) => prev.map((item, idx) => idx === i ? { ...item, checked: !item.checked } : item))}
             onClear={() => setGroceryList([])}
             onAddItem={(item) => { if (!groceryList.some((g) => g.name.toLowerCase() === item.name.toLowerCase())) setGroceryList((prev) => [...prev, item]); }}
+            onDelete={(i) => setGroceryList((prev) => prev.filter((_, idx) => idx !== i))}
+            onEditName={(i, name) => setGroceryList((prev) => prev.map((item, idx) => idx === i ? { ...item, name } : item))}
           />
         )}
 
@@ -419,11 +430,40 @@ function App() {
         </div>
       </nav>
 
-      {activeRecipe && (
-        <RecipeModal recipe={activeRecipe} onClose={() => setActiveRecipe(null)}
-          onAddToList={handleAddRecipeToList} addedToList={addedToList}
-          isFavorite={isRecipeFavorited(activeRecipe)}
-          onToggleFavorite={() => toggleFavorite(activeRecipe)} />
+      {/* Recipe modal — show loading skeleton or full recipe */}
+      {(activeRecipe || loadingFullRecipe) && (
+        activeRecipe ? (
+          <RecipeModal recipe={activeRecipe} onClose={() => { setActiveRecipe(null); setLoadingFullRecipe(false); }}
+            onAddToList={handleAddRecipeToList} addedToList={addedToList}
+            isFavorite={isRecipeFavorited(activeRecipe)}
+            onToggleFavorite={() => toggleFavorite(activeRecipe)} />
+        ) : (
+          <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setLoadingFullRecipe(false)}>
+            <div className="absolute inset-0 bg-black/40 overlay-blur" />
+            <div className="relative bg-card rounded-t-[28px] w-full max-w-lg max-h-[92vh] animate-slide-up safe-bottom p-6"
+              onClick={(e) => e.stopPropagation()}>
+              <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
+              <div className="space-y-4 animate-shimmer">
+                <div className="h-6 bg-sand rounded-xl w-3/4" />
+                <div className="h-4 bg-sand rounded-lg w-full" />
+                <div className="flex gap-3 mt-4">
+                  <div className="flex-1 h-20 bg-sand rounded-2xl" />
+                  <div className="flex-1 h-20 bg-sand rounded-2xl" />
+                  <div className="flex-1 h-20 bg-sand rounded-2xl" />
+                </div>
+                <div className="h-4 bg-sand rounded-lg w-1/2 mt-6" />
+                <div className="space-y-3 mt-2">
+                  <div className="h-3 bg-sand rounded-lg w-full" />
+                  <div className="h-3 bg-sand rounded-lg w-5/6" />
+                  <div className="h-3 bg-sand rounded-lg w-4/5" />
+                  <div className="h-3 bg-sand rounded-lg w-full" />
+                  <div className="h-3 bg-sand rounded-lg w-3/4" />
+                </div>
+              </div>
+              <p className="text-center text-sm text-muted mt-8 font-medium">Loading recipe...</p>
+            </div>
+          </div>
+        )
       )}
     </div>
   );

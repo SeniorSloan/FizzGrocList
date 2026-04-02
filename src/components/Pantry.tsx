@@ -5,7 +5,7 @@ import { useState } from "react";
 export type PantryItem = { name: string; category: string; inStock: boolean; };
 
 const EMOJI: Record<string, string> = {
-  "Spices & Seasonings": "🌶️", "Oils & Sauces": "🫒", "Pantry Staples": "🫘", "Baking": "🧁", "Other": "📦",
+  "Spices & Seasonings": "🌶️", "Oils & Sauces": "🫒", "Baking & Sweeteners": "🧁", "Kitchen Supplies": "🧻", "Other": "📦",
 };
 
 export default function Pantry({ items, onToggle, onAddCustom }: {

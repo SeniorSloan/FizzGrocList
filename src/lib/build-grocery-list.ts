@@ -81,9 +81,9 @@ export function buildGroceryList(
     }
   }
 
-  // Build final list
+  // Build final list — convert recipe measurements to shopping-friendly names
   const items: GroceryItem[] = Array.from(seen.values()).map((ing) => ({
-    name: ing,
+    name: toShoppingName(ing),
     category: categorizeIngredient(ing),
     checked: false,
   }));
@@ -95,6 +95,48 @@ export function buildGroceryList(
     .map((s) => ({ ...s, checked: false }));
 
   return [...items, ...staples];
+}
+
+/**
+ * Convert recipe ingredient to a shopping-friendly name.
+ * "4 tbsp mayonnaise" → "Mayonnaise"
+ * "1 lb ground turkey" → "Ground turkey (1 lb)"
+ * "2 chicken breasts, boneless" → "Chicken breasts (2)"
+ * Keeps real shopping quantities (lb, oz, bag, can) but strips cooking measurements (tbsp, tsp, cup).
+ */
+function toShoppingName(ing: string): string {
+  // Cooking measurements to strip entirely
+  const cookingMeasure = /^[\d\s\/\.]+(?:tbsp|tsp|tablespoons?|teaspoons?|cups?|cloves?|pinch(?:es)?|dash(?:es)?|splash(?:es)?)\s+(?:of\s+)?/i;
+
+  if (cookingMeasure.test(ing)) {
+    // Strip the measurement, capitalize the item
+    const cleaned = ing.replace(cookingMeasure, "").replace(/,\s*.*$/, "").trim();
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }
+
+  // Shopping quantities to keep — reformat as "Item (quantity)"
+  const shoppingQuantity = /^([\d\s\/\.]+(?:lb|lbs|oz|pound|pounds|ounce|ounces|can|cans|bag|bags|box|boxes|bunch|bunches|head|heads|pack|packs|container|jar|jars|bottle|bottles|package|packages)?)\s+(.+)/i;
+  const match = ing.match(shoppingQuantity);
+  if (match) {
+    const qty = match[1].trim();
+    const item = match[2].replace(/,\s*.*$/, "").trim();
+    const capitalized = item.charAt(0).toUpperCase() + item.slice(1);
+    return `${capitalized} (${qty})`;
+  }
+
+  // Just a number + item like "2 avocados"
+  const simpleCount = /^(\d+)\s+(.+)/;
+  const simpleMatch = ing.match(simpleCount);
+  if (simpleMatch) {
+    const count = simpleMatch[1];
+    const item = simpleMatch[2].replace(/,\s*.*$/, "").trim();
+    const capitalized = item.charAt(0).toUpperCase() + item.slice(1);
+    return `${capitalized} (${count})`;
+  }
+
+  // No quantity — just capitalize
+  const cleaned = ing.replace(/,\s*.*$/, "").trim();
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
 
 /** Extract the "core" ingredient name for dedup (strips quantities, prep instructions) */

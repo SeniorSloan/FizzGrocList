@@ -11,12 +11,14 @@ const AISLE_EMOJI: Record<string, string> = {
   "Household": "🧹", "Other": "📦",
 };
 
-export default function GroceryList({ items, onToggle, onClear, onAddItem }: {
+export default function GroceryList({ items, onToggle, onClear, onAddItem, onDelete, onEditName }: {
   items: GroceryItem[]; onToggle: (i: number) => void; onClear: () => void;
-  onAddItem: (item: GroceryItem) => void;
+  onAddItem: (item: GroceryItem) => void; onDelete: (i: number) => void; onEditName: (i: number, name: string) => void;
 }) {
   const [showAdd, setShowAdd] = useState(false);
   const [customItem, setCustomItem] = useState("");
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editText, setEditText] = useState("");
   const [pasteMode, setPasteMode] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [showChecked, setShowChecked] = useState(true);
@@ -191,13 +193,45 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem }: {
             </div>
             <div className="bg-card rounded-2xl shadow-card overflow-hidden">
               {entries.map(({ item, index }, entryIdx) => (
-                <button key={index} onClick={() => onToggle(index)}
-                  className={`w-full flex items-center gap-3.5 px-4 py-4 text-left transition-all active:bg-accent-light/50 ${
+                <div key={index}
+                  className={`flex items-center gap-3 px-4 py-3.5 ${
                     entryIdx < entries.length - 1 ? "border-b border-border/50" : ""
                   }`}>
-                  <div className="w-7 h-7 rounded-xl border-2 border-border flex-shrink-0 transition-all hover:border-accent/40" />
-                  <span className="text-[15px] font-medium">{item.name}</span>
-                </button>
+                  {/* Checkbox */}
+                  <button onClick={() => onToggle(index)}
+                    className="w-7 h-7 rounded-xl border-2 border-border flex-shrink-0 transition-all hover:border-accent/40 active:scale-90" />
+
+                  {/* Name — tap to edit */}
+                  {editingIndex === index ? (
+                    <input
+                      type="text"
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      onBlur={() => { if (editText.trim()) onEditName(index, editText.trim()); setEditingIndex(null); }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { if (editText.trim()) onEditName(index, editText.trim()); setEditingIndex(null); }
+                        if (e.key === "Escape") setEditingIndex(null);
+                      }}
+                      className="flex-1 text-[15px] font-medium bg-sand rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-accent/20"
+                      autoFocus
+                    />
+                  ) : (
+                    <button
+                      onClick={() => { setEditingIndex(index); setEditText(item.name); }}
+                      className="flex-1 text-left text-[15px] font-medium min-w-0 truncate"
+                    >
+                      {item.name}
+                    </button>
+                  )}
+
+                  {/* Delete */}
+                  <button onClick={() => onDelete(index)}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-muted/40 hover:text-danger hover:bg-danger-light transition-all active:scale-90 flex-shrink-0">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               ))}
             </div>
           </div>
