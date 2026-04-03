@@ -10,7 +10,10 @@ type Recipe = {
   ingredients: string[];
 };
 
-const SPICE_PATTERN = /\b(salt|pepper|olive oil|cooking oil|cooking spray|cumin|paprika|garlic powder|onion powder|chili powder|italian seasoning|red pepper flakes|cinnamon|soy sauce|hot sauce|buffalo sauce|flour|baking powder|vanilla extract|oregano|dried oregano|brown sugar|honey|sugar|water|ice)\b/i;
+// Match whole-word spices/pantry items — use word boundaries carefully to avoid false positives
+// "pepper" alone would match "bell pepper" so we use more specific patterns
+const SPICE_PATTERN = /^(salt|black pepper|olive oil|cooking oil|cooking spray|cumin|paprika|garlic powder|onion powder|chili powder|italian seasoning|red pepper flakes|cinnamon|soy sauce|hot sauce|buffalo sauce|flour|baking powder|vanilla extract|oregano|dried oregano|brown sugar|honey|sugar|water|ice)$/i;
+const SPICE_CONTAINS = /(^|\s)(salt and pepper|salt & pepper|olive oil|cooking spray|nonstick spray)(\s|$)/i;
 
 const SKIP_PHRASES = [
   "salt and pepper",
@@ -48,17 +51,23 @@ export function buildGroceryList(
   for (const recipe of recipes) {
     for (const ing of recipe.ingredients) {
       const lower = ing.toLowerCase();
+      // Strip quantities to get the core item name for matching
+      const coreName = lower.replace(/^[\d\s\/\.]+(?:lb|lbs|oz|cup|cups|tbsp|tsp|tablespoons?|teaspoons?|can|cans|bag|bunch|head|cloves?|pack|packs|container|box|jar|pound|pounds|ounce|ounces)?\s*/i, "").replace(/[,\(].*$/, "").trim();
 
-      // Skip if matches a pantry item (fuzzy)
-      if (pantryLower.some((p) => lower.includes(p) || p.includes(lower.replace(/[^a-z ]/g, "").trim()))) {
-        continue;
-      }
+      // Skip if core name exactly matches a pantry item
+      if (pantryLower.some((p) => coreName === p || p === coreName)) continue;
 
-      // Skip spice patterns
-      if (SPICE_PATTERN.test(lower)) continue;
+      // Skip exact spice matches (checks core name, not the full string with quantities)
+      if (SPICE_PATTERN.test(coreName)) continue;
+
+      // Skip spice-containing phrases
+      if (SPICE_CONTAINS.test(lower)) continue;
 
       // Skip filler phrases
       if (SKIP_PHRASES.some((phrase) => lower.includes(phrase))) continue;
+
+      // Skip water specifically but not "watermelon" etc
+      if (/^\d*\s*(?:\/\d+\s*)?(?:cup|cups|tbsp|tsp)?\s*water$/i.test(lower.trim())) continue;
 
       validIngredients.push(ing);
     }
@@ -153,12 +162,14 @@ function extractCoreName(ing: string): string {
 
 function categorizeIngredient(ing: string): string {
   const l = ing.toLowerCase();
-  if (/chicken|turkey|beef|salmon|tuna|meat|sausage/.test(l)) return "Meat & Protein";
-  if (/milk|cheese|yogurt|cream|egg|butter/.test(l)) return "Dairy & Eggs";
-  if (/lettuce|spinach|kale|greens|tomato|onion|garlic|pepper|avocado|cucumber|carrot|zucchini|cilantro|lime|lemon|jalapeno|berry|berries|raspberry|strawberry|apple|orange|grape|fruit|celery/.test(l)) return "Produce";
+  if (/chicken|turkey|beef|salmon|tuna|meat|sausage|shrimp|tilapia|cod|pork|bacon|ham|deli\s/.test(l)) return "Meat & Protein";
+  if (/milk|cheese|yogurt|cream cheese|sour cream|egg|butter|half and half|creamer/.test(l)) return "Dairy & Eggs";
+  if (/lettuce|romaine|spinach|kale|arugula|greens|tomato|onion|garlic|pepper|bell pepper|avocado|cucumber|carrot|zucchini|cilantro|lime|lemon|jalapeno|berry|berries|raspberry|blueberr|strawberr|blackberr|apple|orange|grape|fruit|celery|broccoli|asparagus|corn|mushroom|potato|sweet potato|green bean|snap pea|cabbage|cauliflower|squash|pea|radish|beet|eggplant|scallion|green onion|parsley|basil|mint|ginger|sprout|mango|pineapple|banana|peach|pear|melon|watermelon|cantaloupe|plum|cherry|fig|pomegranate|cranberr|edamame|pico|guac|salsa fresca|jicama/.test(l)) return "Produce";
   if (/frozen/.test(l)) return "Frozen";
-  if (/bread|tortilla|bagel|sourdough/.test(l)) return "Bakery";
-  if (/rice|pasta|mac|bean|grain|quinoa/.test(l)) return "Pantry & Grains";
-  if (/sauce|broth|stock|dressing|salsa|mustard|enchilada|guac/.test(l)) return "Sauces & Condiments";
+  if (/bread|tortilla|bagel|sourdough|pita|bun|roll|wrap|english muffin|croissant|naan/.test(l)) return "Bakery";
+  if (/rice|pasta|mac |bean|grain|quinoa|oat|cereal|granola|cracker|chip|pretzel|nut |nuts|peanut|almond|protein bar|can of/.test(l)) return "Pantry & Grains";
+  if (/sauce|broth|stock|dressing|salsa|mustard|enchilada|guac|mayo|mayonnaise|ketchup|sriracha|vinaigrette|marinade|pesto|hummus|dip/.test(l)) return "Sauces & Condiments";
+  if (/energy drink|olipop|bloom|soda|juice|coffee|cold brew|tea|kombucha/.test(l)) return "Drinks";
+  if (/detergent|paper|towel|soap|wipe|trash bag|sponge|tissue/.test(l)) return "Household";
   return "Other";
 }
