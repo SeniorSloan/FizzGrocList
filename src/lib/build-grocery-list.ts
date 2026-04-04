@@ -160,7 +160,7 @@ function extractCoreName(ing: string): string {
     .trim();
 }
 
-function categorizeIngredient(ing: string): string {
+export function categorizeIngredient(ing: string): string {
   const l = ing.toLowerCase();
   if (/chicken|turkey|beef|salmon|tuna|meat|sausage|shrimp|tilapia|cod|pork|bacon|ham|deli\s/.test(l)) return "Meat & Protein";
   if (/milk|cheese|yogurt|cream cheese|sour cream|egg|butter|half and half|creamer/.test(l)) return "Dairy & Eggs";

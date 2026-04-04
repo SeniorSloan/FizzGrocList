@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { GroceryItem } from "@/app/page";
 import { FAVORITES } from "@/lib/staples";
+import { categorizeIngredient } from "@/lib/build-grocery-list";
 
 const AISLE_EMOJI: Record<string, string> = {
   "Produce": "🥬", "Meat & Protein": "🥩", "Dairy & Eggs": "🧀",
@@ -38,9 +39,9 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem, onDel
             <input type="text" value={customItem} onChange={(e) => setCustomItem(e.target.value)}
               placeholder="Add an item..."
               className="flex-1 text-[15px] bg-card shadow-card rounded-2xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:shadow-lifted transition-all"
-              onKeyDown={(e) => { if (e.key === "Enter" && customItem.trim()) { onAddItem({ name: customItem.trim(), category: "Other", checked: false }); setCustomItem(""); } }}
+              onKeyDown={(e) => { if (e.key === "Enter" && customItem.trim()) { onAddItem({ name: customItem.trim(), category: categorizeIngredient(customItem.trim()), checked: false }); setCustomItem(""); } }}
             />
-            <button onClick={() => { if (customItem.trim()) { onAddItem({ name: customItem.trim(), category: "Other", checked: false }); setCustomItem(""); } }}
+            <button onClick={() => { if (customItem.trim()) { onAddItem({ name: customItem.trim(), category: categorizeIngredient(customItem.trim()), checked: false }); setCustomItem(""); } }}
               className="bg-accent text-white px-5 py-3.5 rounded-2xl text-sm font-bold shadow-button active:scale-95 transition-all">
               Add
             </button>
@@ -138,9 +139,9 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem, onDel
                   placeholder="What do you need?"
                   className="flex-1 text-[15px] bg-sand rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent/20"
                   autoFocus
-                  onKeyDown={(e) => { if (e.key === "Enter" && customItem.trim()) { onAddItem({ name: customItem.trim(), category: "Other", checked: false }); setCustomItem(""); } }}
+                  onKeyDown={(e) => { if (e.key === "Enter" && customItem.trim()) { onAddItem({ name: customItem.trim(), category: categorizeIngredient(customItem.trim()), checked: false }); setCustomItem(""); } }}
                 />
-                <button onClick={() => { if (customItem.trim()) { onAddItem({ name: customItem.trim(), category: "Other", checked: false }); setCustomItem(""); } }}
+                <button onClick={() => { if (customItem.trim()) { onAddItem({ name: customItem.trim(), category: categorizeIngredient(customItem.trim()), checked: false }); setCustomItem(""); } }}
                   className="bg-accent text-white px-5 py-3 rounded-xl text-sm font-bold active:scale-95 transition-all shadow-button">Add</button>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -166,7 +167,7 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem, onDel
                   .filter((line) => line.length > 0 && line.length < 80);
                 for (const item of parsed) {
                   if (!existingNames.has(item.toLowerCase())) {
-                    onAddItem({ name: item, category: "Other", checked: false });
+                    onAddItem({ name: item, category: categorizeIngredient(item), checked: false });
                   }
                 }
                 setPasteText("");
