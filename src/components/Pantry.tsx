@@ -33,7 +33,7 @@ export default function Pantry({ items, onToggle, onAddCustom }: {
           </p>
         </div>
         <button onClick={() => setAdding(true)}
-          className="text-[13px] bg-card text-accent px-4 py-2 rounded-2xl font-semibold shadow-card hover:shadow-lifted transition-all active:scale-95">
+          className="text-[13px] bg-card text-accent px-4 py-2.5 rounded-2xl font-semibold shadow-card hover:shadow-lifted transition-all active:scale-95 min-h-[44px]">
           + Add Item
         </button>
       </div>
@@ -52,43 +52,47 @@ export default function Pantry({ items, onToggle, onAddCustom }: {
         <div className="bg-card rounded-2xl shadow-card p-4 mb-6 animate-fade-up">
           <div className="flex gap-2">
             <input type="text" value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder="Item name..."
-              className="flex-1 text-[15px] bg-sand rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent/20" autoFocus
+              className="flex-1 text-[16px] bg-sand rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/20" autoFocus
               onKeyDown={(e) => { if (e.key === "Enter" && newItem.trim()) { onAddCustom(newItem.trim(), "Other"); setNewItem(""); setAdding(false); } }}
             />
             <button onClick={() => { if (newItem.trim()) { onAddCustom(newItem.trim(), "Other"); setNewItem(""); setAdding(false); } }}
-              className="bg-accent text-white px-5 py-3 rounded-xl text-sm font-bold shadow-button active:scale-95 transition-all">Add</button>
-            <button onClick={() => { setAdding(false); setNewItem(""); }} className="text-muted text-sm font-semibold px-2">Cancel</button>
+              className="bg-accent text-white px-5 py-3.5 rounded-xl text-sm font-bold shadow-button active:scale-95 transition-all min-h-[44px] min-w-[44px]">Add</button>
+            <button onClick={() => { setAdding(false); setNewItem(""); }}
+              className="text-muted text-sm font-semibold px-3 min-h-[44px] flex items-center">Cancel</button>
           </div>
         </div>
       )}
 
       {/* Pantry grid by category */}
-      <div className="space-y-6">
+      <div className="space-y-8">
         {Object.entries(grouped).map(([category, entries]) => (
           <div key={category} className="animate-fade-up">
             <div className="flex items-center gap-2 mb-3 px-1">
-              <span className="text-base">{EMOJI[category] || "📦"}</span>
+              <span className="text-lg">{EMOJI[category] || "📦"}</span>
               <h3 className="text-[12px] font-bold uppercase tracking-widest text-muted">{category}</h3>
               <div className="flex-1 h-px bg-border ml-2" />
+              <span className="text-[11px] text-muted/50 font-bold">
+                {entries.filter(e => e.item.inStock).length}/{entries.length}
+              </span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               {entries.map(({ item, index }) => (
                 <button key={index} onClick={() => onToggle(index)}
-                  className={`flex items-center gap-2.5 px-3.5 py-3.5 rounded-2xl text-[13px] transition-all active:scale-[0.97] ${
+                  className={`flex items-center gap-3 px-4 py-4 rounded-2xl text-[13px] transition-all active:scale-[0.97] min-h-[52px] ${
                     item.inStock
-                      ? "bg-sage-light text-foreground shadow-card font-semibold"
-                      : "bg-card text-muted/60 shadow-soft"
+                      ? "bg-sage-light text-foreground shadow-card font-semibold ring-1 ring-sage/10"
+                      : "bg-card text-muted/50 shadow-soft"
                   }`}>
-                  <div className={`w-5 h-5 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
-                    item.inStock ? "bg-sage" : "border-2 border-border"
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
+                    item.inStock ? "bg-sage" : "border-2 border-border/60"
                   }`}>
                     {item.inStock && (
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     )}
                   </div>
-                  <span className="truncate">{item.name}</span>
+                  <span className={`truncate ${!item.inStock ? "line-through decoration-border" : ""}`}>{item.name}</span>
                 </button>
               ))}
             </div>

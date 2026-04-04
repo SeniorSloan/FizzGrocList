@@ -31,7 +31,8 @@
       "Bash(gh repo:*)",
       "Bash(vercel:*)",
       "Bash(git push:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(wc:*)"
     ]
   }
 }

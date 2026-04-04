@@ -16,21 +16,34 @@ export default function SavedRecipes({ recipes, favorites, onViewRecipe, onRemov
 
   if (hasNothing) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-up">
+      <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-up">
         <div className="w-24 h-24 bg-accent-light rounded-3xl flex items-center justify-center mb-6 shadow-card">
           <span className="text-5xl">📖</span>
         </div>
         <h2 className="text-xl font-extrabold mb-2">No recipes yet</h2>
-        <p className="text-muted text-[14px] max-w-[260px] leading-relaxed">
-          Plan some meals or search for a craving. Your recipes and favorites will show up here.
+        <p className="text-muted text-[14px] max-w-[260px] mb-6 leading-relaxed">
+          Plan some meals or search for a craving to get started
         </p>
+        <div className="bg-warm rounded-2xl p-4 max-w-[300px] text-left">
+          <p className="text-[13px] leading-relaxed">
+            <span className="font-bold">How to save recipes: </span>
+            Go to the Plan tab, tap any meal, then tap the heart to save it as a favorite.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="pb-6">
-      <h2 className="text-2xl font-extrabold tracking-tight mb-6">Recipes</h2>
+      <div className="mb-6">
+        <h2 className="text-2xl font-extrabold tracking-tight">Recipes</h2>
+        <p className="text-[13px] text-muted mt-1 font-medium">
+          {favorites.length > 0 ? `${favorites.length} favorite${favorites.length !== 1 ? "s" : ""}` : ""}
+          {favorites.length > 0 && recipes.length > 0 ? " \u00b7 " : ""}
+          {recipes.length > 0 ? `${recipes.length} this week` : ""}
+        </p>
+      </div>
 
       {/* Favorites section */}
       {favorites.length > 0 && (
@@ -38,7 +51,7 @@ export default function SavedRecipes({ recipes, favorites, onViewRecipe, onRemov
           <div className="flex items-center gap-2 mb-3 px-1">
             <span className="text-accent text-base">♥</span>
             <h3 className="text-[12px] font-bold uppercase tracking-widest text-accent">Favorites</h3>
-            <span className="text-[12px] font-bold text-accent bg-accent-light px-2 py-0.5 rounded-full">{favorites.length}</span>
+            <span className="text-[12px] font-bold text-accent bg-accent-light px-2.5 py-0.5 rounded-full">{favorites.length}</span>
             <div className="flex-1 h-px bg-accent-light ml-2" />
           </div>
           <div className="space-y-3">
@@ -57,9 +70,12 @@ export default function SavedRecipes({ recipes, favorites, onViewRecipe, onRemov
             <div className="flex items-center gap-2">
               <span className="text-base">📋</span>
               <h3 className="text-[12px] font-bold uppercase tracking-widest text-muted">This Week</h3>
-              <span className="text-[12px] font-bold text-muted bg-sand px-2 py-0.5 rounded-full">{recipes.length}</span>
+              <span className="text-[12px] font-bold text-muted bg-sand px-2.5 py-0.5 rounded-full">{recipes.length}</span>
             </div>
-            <button onClick={onClearAll} className="text-[12px] text-muted hover:text-danger font-semibold transition-colors">Clear All</button>
+            <button onClick={onClearAll}
+              className="text-[12px] text-muted hover:text-danger font-semibold transition-colors min-h-[36px] px-2 flex items-center">
+              Clear All
+            </button>
           </div>
           <div className="space-y-3">
             {recipes.map((saved, i) => (
@@ -79,8 +95,14 @@ function RecipeCard({ saved, onView, onRemove, removeLabel, isFavorite }: {
   return (
     <div className="bg-card rounded-2xl shadow-card overflow-hidden transition-all hover:shadow-lifted animate-fade-up">
       <button onClick={onView}
-        className="w-full text-left p-4 active:bg-sand/30 transition-colors">
+        className="w-full text-left p-4 active:bg-sand/30 transition-colors min-h-[80px]">
         <div className="flex items-start justify-between gap-3">
+          {/* Emoji preview */}
+          {saved.recipe.emoji && (
+            <div className="w-11 h-11 rounded-2xl bg-accent-light/60 flex items-center justify-center flex-shrink-0">
+              <span className="text-xl">{saved.recipe.emoji}</span>
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-[15px] leading-snug">{saved.recipe.title}</h3>
@@ -89,7 +111,7 @@ function RecipeCard({ saved, onView, onRemove, removeLabel, isFavorite }: {
             {saved.recipe.description && (
               <p className="text-[12px] text-muted mt-1 line-clamp-1 leading-relaxed">{saved.recipe.description}</p>
             )}
-            <div className="flex gap-4 mt-2">
+            <div className="flex gap-4 mt-2.5">
               {[
                 { icon: "🕐", value: saved.recipe.prepTime, label: "prep" },
                 { icon: "🔥", value: saved.recipe.cookTime, label: "cook" },
@@ -101,7 +123,7 @@ function RecipeCard({ saved, onView, onRemove, removeLabel, isFavorite }: {
               ))}
             </div>
           </div>
-          <div className="w-9 h-9 rounded-xl bg-accent-light flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-accent-light flex items-center justify-center flex-shrink-0">
             <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
@@ -109,7 +131,10 @@ function RecipeCard({ saved, onView, onRemove, removeLabel, isFavorite }: {
         </div>
       </button>
       <div className="border-t border-border/50 px-4 py-2.5 flex justify-end">
-        <button onClick={onRemove} className="text-[12px] text-muted hover:text-danger font-semibold transition-colors">{removeLabel}</button>
+        <button onClick={onRemove}
+          className="text-[12px] text-muted hover:text-danger font-semibold transition-colors min-h-[36px] px-2 flex items-center">
+          {removeLabel}
+        </button>
       </div>
     </div>
   );

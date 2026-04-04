@@ -58,14 +58,14 @@ export default function CravingSearch({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="What are you craving?"
-            className="flex-1 text-[15px] bg-transparent py-3.5 focus:outline-none placeholder:text-muted/60"
+            className="flex-1 text-[16px] bg-transparent py-3.5 focus:outline-none placeholder:text-muted/60"
             onKeyDown={(e) => { if (e.key === "Enter") handleSearch(query); }}
           />
           {query.trim() && (
             <button
               onClick={() => handleSearch(query)}
               disabled={searching}
-              className="bg-accent text-white px-4 py-2 rounded-xl text-sm font-semibold active:scale-95 transition-all disabled:opacity-50 shadow-button"
+              className="bg-accent text-white px-5 py-2.5 rounded-xl text-sm font-semibold active:scale-95 transition-all disabled:opacity-50 shadow-button min-h-[40px] min-w-[44px]"
             >
               {searching ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -77,17 +77,17 @@ export default function CravingSearch({
         </div>
       </div>
 
-      {/* Quick suggestions */}
+      {/* Quick suggestions — larger touch targets */}
       {options.length === 0 && !searching && (
-        <div className="flex gap-2 overflow-x-auto mt-3 pb-1 scrollbar-hide -mx-1 px-1">
+        <div className="flex gap-2.5 overflow-x-auto mt-3.5 pb-1 scrollbar-hide -mx-1 px-1">
           {quickIdeas.map((s) => (
             <button
               key={s.label}
               onClick={() => { setQuery(s.label); handleSearch(s.label); }}
               disabled={searching}
-              className="flex-shrink-0 text-[13px] bg-card text-muted px-3.5 py-2 rounded-2xl shadow-soft font-medium hover:text-accent hover:shadow-card transition-all active:scale-95 disabled:opacity-50"
+              className="flex-shrink-0 text-[13px] bg-card text-muted px-4 py-2.5 rounded-2xl shadow-soft font-medium hover:text-accent hover:shadow-card transition-all active:scale-95 disabled:opacity-50 min-h-[40px]"
             >
-              <span className="mr-1">{s.emoji}</span> {s.label}
+              <span className="mr-1.5">{s.emoji}</span>{s.label}
             </button>
           ))}
         </div>
@@ -103,21 +103,21 @@ export default function CravingSearch({
 
       {/* Results */}
       {options.length > 0 && (
-        <div className="mt-4 space-y-2.5 animate-fade-up">
+        <div className="mt-4 space-y-3 animate-fade-up">
           <p className="text-[11px] font-bold uppercase tracking-widest text-muted px-1">Pick one</p>
           {options.map((opt, i) => (
             <button
               key={i}
               onClick={() => { onOptionPicked(opt); setOptions([]); setQuery(""); }}
               disabled={searching}
-              className="w-full text-left bg-card rounded-2xl p-4 shadow-card hover:shadow-lifted transition-all active:scale-[0.98] disabled:opacity-50 group"
+              className="w-full text-left bg-card rounded-2xl p-4 shadow-card hover:shadow-lifted transition-all active:scale-[0.98] disabled:opacity-50 group min-h-[72px]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-[15px] group-hover:text-accent transition-colors">{opt.name}</h4>
-                  <p className="text-[12px] text-muted mt-0.5 leading-relaxed">{opt.description}</p>
+                  <p className="text-[13px] text-muted mt-0.5 leading-relaxed">{opt.description}</p>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-accent-light flex items-center justify-center flex-shrink-0 group-hover:bg-accent transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-accent-light flex items-center justify-center flex-shrink-0 group-hover:bg-accent transition-colors">
                   <svg className="w-4 h-4 text-accent group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
@@ -125,16 +125,16 @@ export default function CravingSearch({
               </div>
               <div className="flex flex-wrap gap-1.5 mt-2.5">
                 {opt.ingredients.slice(0, 6).map((ing, j) => (
-                  <span key={j} className="text-[11px] bg-sand text-muted px-2.5 py-0.5 rounded-full">{ing}</span>
+                  <span key={j} className="text-[11px] bg-sand text-muted px-2.5 py-1 rounded-full font-medium">{ing}</span>
                 ))}
                 {opt.ingredients.length > 6 && (
-                  <span className="text-[11px] text-muted/60 px-1">+{opt.ingredients.length - 6}</span>
+                  <span className="text-[11px] text-muted/60 px-1 py-1">+{opt.ingredients.length - 6}</span>
                 )}
               </div>
             </button>
           ))}
           <button onClick={() => setOptions([])}
-            className="text-xs text-muted hover:text-accent font-semibold w-full text-center py-2 transition-colors">
+            className="text-[13px] text-muted hover:text-accent font-semibold w-full text-center py-3 transition-colors min-h-[44px]">
             Clear results
           </button>
         </div>

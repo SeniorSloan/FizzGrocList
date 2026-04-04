@@ -110,6 +110,32 @@ body {
 }
 .animate-bounce-in { animation: bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-6px); }
+  30% { transform: translateX(5px); }
+  45% { transform: translateX(-4px); }
+  60% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+}
+.animate-shake { animation: shake 0.4s ease-in-out; }
+
+@keyframes confetti-pop {
+  0% { transform: scale(0) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+  100% { transform: scale(0.8) rotate(360deg); opacity: 0; }
+}
+.animate-confetti { animation: confetti-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+@keyframes celebrate {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.05); }
+  50% { transform: scale(0.98); }
+  75% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+.animate-celebrate { animation: celebrate 0.5s ease-out; }
+
 @keyframes strikethrough {
   from { width: 0; }
   to { width: 100%; }
@@ -151,4 +177,35 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Ensure minimum touch targets — apply to interactive elements */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Smooth page transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Grocery item check animation — satisfying swipe feel */
+.grocery-item-check {
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.grocery-item-check.checking {
+  transform: translateX(4px);
+  opacity: 0.7;
+}
+
+/* Progress bar glow at 100% */
+.progress-complete {
+  box-shadow: 0 0 12px rgba(92, 184, 123, 0.4);
 }

@@ -281,13 +281,16 @@ function App() {
     <div className="flex flex-col min-h-screen bg-background">
       {/* Loading bar */}
       {loadingList && (
-        <div className="fixed top-0 left-0 right-0 h-1 bg-accent-light overflow-hidden z-50">
+        <div className="fixed top-0 left-0 right-0 h-1 bg-accent-light overflow-hidden z-50 safe-top">
           <div className="h-full bg-gradient-to-r from-accent to-pink-300 rounded-full animate-[shimmer_1.5s_ease-in-out_infinite]"
             style={{ width: "70%", backgroundSize: "200% 100%" }} />
         </div>
       )}
 
-      <main className="flex-1 max-w-md mx-auto w-full px-5 pt-6 pb-28">
+      {/* Extra bottom padding when build button is visible to prevent content overlap */}
+      <main className={`flex-1 max-w-md mx-auto w-full px-5 pt-6 ${
+        activeTab === "home" && totalSelected > 0 ? "pb-40" : "pb-28"
+      }`}>
         {activeTab === "home" && (
           <div>
             {/* Page title */}
@@ -368,12 +371,12 @@ function App() {
         )}
       </main>
 
-      {/* Sticky build button */}
+      {/* Sticky build button — higher z-index, better spacing from nav */}
       {activeTab === "home" && totalSelected > 0 && (
-        <div className="fixed bottom-20 left-0 right-0 px-5 z-40 animate-fade-up">
+        <div className="fixed bottom-[76px] left-0 right-0 px-5 z-40 animate-fade-up safe-bottom">
           <div className="max-w-md mx-auto">
             <button onClick={handleBuildList} disabled={loadingList}
-              className="w-full bg-accent text-white py-4 rounded-2xl text-[15px] font-bold hover:bg-accent-dark transition-all disabled:opacity-50 shadow-button active:scale-[0.98]"
+              className="w-full bg-accent text-white py-4 rounded-2xl text-[15px] font-bold hover:bg-accent-dark transition-all disabled:opacity-50 shadow-button active:scale-[0.98] min-h-[52px]"
             >
               {loadingList ? (
                 <span className="flex items-center justify-center gap-2">
@@ -388,16 +391,16 @@ function App() {
         </div>
       )}
 
-      {/* Bottom tab bar */}
+      {/* Bottom tab bar — taller tap targets */}
       <nav className="fixed bottom-0 left-0 right-0 bg-glass backdrop-blur-xl border-t border-border/50 z-30 safe-bottom">
-        <div className="max-w-md mx-auto flex items-center justify-around h-16">
+        <div className="max-w-md mx-auto flex items-center justify-around h-[68px]">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.key;
             return (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className="relative flex flex-col items-center gap-0.5 px-5 py-2 transition-all active:scale-90"
+                className="relative flex flex-col items-center justify-center gap-0.5 min-w-[64px] min-h-[52px] px-4 py-2 transition-all active:scale-90"
               >
                 <div className="relative">
                   <span className={`text-xl leading-none transition-all ${isActive ? "scale-110" : "grayscale-[30%] opacity-70"}`}
@@ -405,7 +408,7 @@ function App() {
                     {isActive ? tab.activeIcon : tab.icon}
                   </span>
                   {tab.badge && tab.badge > 0 && (
-                    <span className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 animate-bounce-in">
+                    <span className="absolute -top-1.5 -right-3 min-w-[18px] h-[18px] bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 animate-bounce-in">
                       {tab.badge > 99 ? "99+" : tab.badge}
                     </span>
                   )}
@@ -424,7 +427,7 @@ function App() {
         </div>
       </nav>
 
-      {/* Recipe modal — show loading skeleton or full recipe */}
+      {/* Recipe modal -- show loading skeleton or full recipe */}
       {(activeRecipe || loadingFullRecipe) && (
         activeRecipe ? (
           <RecipeModal recipe={activeRecipe} onClose={() => { setActiveRecipe(null); setLoadingFullRecipe(false); }}
@@ -436,25 +439,42 @@ function App() {
             <div className="absolute inset-0 bg-black/40 overlay-blur" />
             <div className="relative bg-card rounded-t-[28px] w-full max-w-lg max-h-[92vh] animate-slide-up safe-bottom p-6"
               onClick={(e) => e.stopPropagation()}>
+              {/* Drag handle */}
               <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-              <div className="space-y-4 animate-shimmer">
-                <div className="h-6 bg-sand rounded-xl w-3/4" />
-                <div className="h-4 bg-sand rounded-lg w-full" />
-                <div className="flex gap-3 mt-4">
-                  <div className="flex-1 h-20 bg-sand rounded-2xl" />
-                  <div className="flex-1 h-20 bg-sand rounded-2xl" />
-                  <div className="flex-1 h-20 bg-sand rounded-2xl" />
+
+              {/* Skeleton with staggered animation */}
+              <div className="space-y-4">
+                <div className="h-7 bg-sand rounded-xl w-3/4 animate-shimmer" />
+                <div className="h-4 bg-sand rounded-lg w-full animate-shimmer" style={{ animationDelay: "0.1s" }} />
+
+                {/* Meta chip skeletons */}
+                <div className="flex gap-3 mt-5">
+                  <div className="flex-1 h-24 bg-sand rounded-2xl animate-shimmer" style={{ animationDelay: "0.15s" }} />
+                  <div className="flex-1 h-24 bg-sand rounded-2xl animate-shimmer" style={{ animationDelay: "0.2s" }} />
+                  <div className="flex-1 h-24 bg-sand rounded-2xl animate-shimmer" style={{ animationDelay: "0.25s" }} />
                 </div>
-                <div className="h-4 bg-sand rounded-lg w-1/2 mt-6" />
+
+                {/* Ingredient skeletons */}
+                <div className="h-4 bg-sand rounded-lg w-1/3 mt-6 animate-shimmer" style={{ animationDelay: "0.3s" }} />
                 <div className="space-y-3 mt-2">
-                  <div className="h-3 bg-sand rounded-lg w-full" />
-                  <div className="h-3 bg-sand rounded-lg w-5/6" />
-                  <div className="h-3 bg-sand rounded-lg w-4/5" />
-                  <div className="h-3 bg-sand rounded-lg w-full" />
-                  <div className="h-3 bg-sand rounded-lg w-3/4" />
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="w-2.5 h-2.5 rounded-full bg-sand animate-shimmer" style={{ animationDelay: `${0.35 + i * 0.05}s` }} />
+                      <div className="h-4 bg-sand rounded-lg animate-shimmer" style={{ width: `${70 - i * 8}%`, animationDelay: `${0.35 + i * 0.05}s` }} />
+                    </div>
+                  ))}
                 </div>
               </div>
+
               <p className="text-center text-sm text-muted mt-8 font-medium">Loading recipe...</p>
+
+              {/* Close button */}
+              <button onClick={() => setLoadingFullRecipe(false)}
+                className="absolute top-4 right-4 w-10 h-10 rounded-xl bg-sand flex items-center justify-center text-muted hover:text-foreground transition-colors active:scale-90">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
         )

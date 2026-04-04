@@ -37,8 +37,13 @@ export default function RecipeModal({ recipe, onClose, onAddToList, addedToList,
 }) {
   const [servings, setServings] = useState(recipe.servings);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [justAdded, setJustAdded] = useState(false);
   const ratio = servings / recipe.servings;
   const scaledIngredients = recipe.ingredients.map((ing) => scaleIngredient(ing, ratio));
+
+  const stepsProgress = recipe.steps.length > 0
+    ? Math.round((completedSteps.size / recipe.steps.length) * 100)
+    : 0;
 
   const toggleStep = (i: number) => {
     setCompletedSteps((prev) => {
@@ -46,6 +51,12 @@ export default function RecipeModal({ recipe, onClose, onAddToList, addedToList,
       next.has(i) ? next.delete(i) : next.add(i);
       return next;
     });
+  };
+
+  const handleAddToList = () => {
+    onAddToList(scaledIngredients);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 600);
   };
 
   return (
@@ -58,87 +69,99 @@ export default function RecipeModal({ recipe, onClose, onAddToList, addedToList,
         className="relative bg-card rounded-t-[28px] w-full max-w-lg max-h-[92vh] overflow-y-auto animate-slide-up safe-bottom"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Hero banner with emoji */}
-        <div className="relative bg-gradient-to-br from-accent-light via-pink-50 to-warm rounded-t-[28px] pt-4 pb-8 text-center">
-          <div className="w-10 h-1 bg-white/40 rounded-full mx-auto mb-4" />
-          <div className="text-6xl mb-2 drop-shadow-sm">{recipe.emoji || "🍽️"}</div>
-          {/* Close + fav buttons */}
-          <div className="absolute top-4 right-4 flex gap-2">
+        {/* Hero banner with emoji — more generous padding */}
+        <div className="relative bg-gradient-to-br from-accent-light via-pink-50 to-warm rounded-t-[28px] pt-5 pb-10 text-center overflow-hidden">
+          {/* Decorative circles */}
+          <div className="absolute -top-8 -left-8 w-32 h-32 bg-accent/5 rounded-full" />
+          <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-warm-dark/5 rounded-full" />
+
+          {/* Drag handle */}
+          <div className="w-10 h-1 bg-white/50 rounded-full mx-auto mb-5" />
+
+          {/* Big emoji */}
+          <div className={`text-7xl mb-3 drop-shadow-sm ${justAdded ? "animate-bounce-in" : ""}`}>
+            {recipe.emoji || "🍽️"}
+          </div>
+
+          {/* Close + fav buttons — 44px minimum */}
+          <div className="absolute top-4 left-4">
+            <button onClick={onClose}
+              className="w-11 h-11 rounded-2xl bg-white/60 backdrop-blur-sm flex items-center justify-center text-muted hover:bg-white/90 transition-all active:scale-90">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          </div>
+          <div className="absolute top-4 right-4">
             <button onClick={onToggleFavorite}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 backdrop-blur-sm ${
+              className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all active:scale-90 backdrop-blur-sm ${
                 isFavorite ? "bg-white/90" : "bg-white/60 hover:bg-white/90"
               }`}>
-              <svg className={`w-[18px] h-[18px] transition-colors ${isFavorite ? "text-accent fill-accent" : "text-muted"}`}
+              <svg className={`w-5 h-5 transition-all ${isFavorite ? "text-accent fill-accent scale-110" : "text-muted"}`}
                 viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
                 fill={isFavorite ? "currentColor" : "none"}>
                 <path strokeLinecap="round" strokeLinejoin="round"
                   d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
               </svg>
             </button>
-            <button onClick={onClose}
-              className="w-9 h-9 rounded-xl bg-white/60 backdrop-blur-sm flex items-center justify-center text-muted hover:bg-white/90 transition-all active:scale-90">
-              <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="bg-card -mt-4 rounded-t-[20px] relative z-10 pt-5">
-          <div className="px-5 pb-4">
+        {/* Content card overlapping hero */}
+        <div className="bg-card -mt-5 rounded-t-[24px] relative z-10 pt-6">
+          <div className="px-5 pb-5">
             <h2 className="text-xl font-extrabold leading-tight tracking-tight">{recipe.title}</h2>
             {recipe.description && (
-              <p className="text-[13px] text-muted mt-1.5 leading-relaxed">{recipe.description}</p>
+              <p className="text-[14px] text-muted mt-2 leading-relaxed">{recipe.description}</p>
             )}
 
-            {/* Meta chips */}
-            <div className="flex gap-2.5 mt-4">
-              <div className="flex-1 bg-sand rounded-2xl py-3 px-3 text-center">
-                <div className="text-lg mb-0.5">🕐</div>
-                <div className="text-[13px] font-bold">{recipe.prepTime}</div>
-                <div className="text-[10px] text-muted font-medium mt-0.5">Prep</div>
+            {/* Meta chips — more spacious */}
+            <div className="flex gap-3 mt-5">
+              <div className="flex-1 bg-sand rounded-2xl py-3.5 px-3 text-center">
+                <div className="text-xl mb-1">🕐</div>
+                <div className="text-[14px] font-bold">{recipe.prepTime}</div>
+                <div className="text-[11px] text-muted font-medium mt-0.5">Prep</div>
               </div>
-              <div className="flex-1 bg-sand rounded-2xl py-3 px-3 text-center">
-                <div className="text-lg mb-0.5">🔥</div>
-                <div className="text-[13px] font-bold">{recipe.cookTime}</div>
-                <div className="text-[10px] text-muted font-medium mt-0.5">Cook</div>
+              <div className="flex-1 bg-sand rounded-2xl py-3.5 px-3 text-center">
+                <div className="text-xl mb-1">🔥</div>
+                <div className="text-[14px] font-bold">{recipe.cookTime}</div>
+                <div className="text-[11px] text-muted font-medium mt-0.5">Cook</div>
               </div>
-              {/* Adjustable servings */}
-              <div className="flex-1 bg-accent-light rounded-2xl py-2.5 px-2 text-center">
-                <div className="text-lg mb-0.5">👩‍🍳</div>
-                <div className="flex items-center justify-center gap-2">
+              {/* Adjustable servings — much larger tap targets */}
+              <div className="flex-1 bg-accent-light rounded-2xl py-3 px-2 text-center">
+                <div className="text-xl mb-1">👩‍🍳</div>
+                <div className="flex items-center justify-center gap-1.5">
                   <button onClick={() => setServings(Math.max(1, servings - 1))}
-                    className="w-6 h-6 rounded-lg bg-card shadow-soft flex items-center justify-center text-accent text-sm font-bold active:scale-90 transition-transform">
-                    -
+                    className="w-8 h-8 rounded-xl bg-card shadow-soft flex items-center justify-center text-accent font-bold active:scale-90 transition-all text-lg leading-none">
+                    &minus;
                   </button>
-                  <span className="text-[14px] font-extrabold w-4 text-center text-accent-dark">{servings}</span>
+                  <span className="text-[16px] font-extrabold min-w-[20px] text-center text-accent-dark">{servings}</span>
                   <button onClick={() => setServings(Math.min(12, servings + 1))}
-                    className="w-6 h-6 rounded-lg bg-card shadow-soft flex items-center justify-center text-accent text-sm font-bold active:scale-90 transition-transform">
+                    className="w-8 h-8 rounded-xl bg-card shadow-soft flex items-center justify-center text-accent font-bold active:scale-90 transition-all text-lg leading-none">
                     +
                   </button>
                 </div>
-                <div className="text-[10px] text-accent-dark font-semibold mt-0.5">Servings</div>
+                <div className="text-[11px] text-accent-dark font-semibold mt-1">Servings</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="px-5 pb-4 space-y-6">
+        <div className="px-5 pb-5 space-y-8">
           {/* Ingredients */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-[13px] font-bold uppercase tracking-widest text-accent">Ingredients</h3>
               {ratio !== 1 && (
                 <span className="text-[11px] text-accent font-bold bg-accent-light px-2.5 py-1 rounded-lg">
-                  {servings} servings
+                  Scaled for {servings}
                 </span>
               )}
             </div>
-            <div className="bg-sand rounded-2xl p-4 space-y-3">
+            <div className="bg-sand rounded-2xl p-4 space-y-3.5">
               {scaledIngredients.map((ing, i) => (
-                <div key={i} className="flex items-start gap-3 text-[14px]">
-                  <div className="w-2 h-2 rounded-full bg-accent mt-2 flex-shrink-0" />
+                <div key={i} className="flex items-start gap-3 text-[15px]">
+                  <div className="w-2.5 h-2.5 rounded-full bg-accent mt-1.5 flex-shrink-0" />
                   <span className="leading-relaxed">{ing}</span>
                 </div>
               ))}
@@ -147,16 +170,23 @@ export default function RecipeModal({ recipe, onClose, onAddToList, addedToList,
 
           {/* Steps */}
           <div>
-            <h3 className="text-[13px] font-bold uppercase tracking-widest text-accent mb-3">Steps</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[13px] font-bold uppercase tracking-widest text-accent">Steps</h3>
+              {completedSteps.size > 0 && (
+                <span className="text-[11px] text-sage font-bold bg-sage-light px-2.5 py-1 rounded-lg">
+                  {stepsProgress}% done
+                </span>
+              )}
+            </div>
             <div className="space-y-3">
               {recipe.steps.map((step, i) => {
                 const done = completedSteps.has(i);
                 return (
                   <button key={i} onClick={() => toggleStep(i)}
-                    className={`flex gap-3.5 w-full text-left p-3 rounded-2xl transition-all active:scale-[0.99] ${
+                    className={`flex gap-3.5 w-full text-left p-4 rounded-2xl transition-all active:scale-[0.99] min-h-[56px] ${
                       done ? "bg-sage-light/50" : "bg-card shadow-soft hover:shadow-card"
                     }`}>
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
                       done ? "bg-sage" : "bg-accent-light"
                     }`}>
                       {done ? (
@@ -164,10 +194,10 @@ export default function RecipeModal({ recipe, onClose, onAddToList, addedToList,
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       ) : (
-                        <span className="text-[13px] font-bold text-accent">{i + 1}</span>
+                        <span className="text-[14px] font-bold text-accent">{i + 1}</span>
                       )}
                     </div>
-                    <p className={`text-[14px] leading-relaxed pt-1 transition-colors ${done ? "text-muted line-through decoration-muted/30" : ""}`}>
+                    <p className={`text-[15px] leading-relaxed pt-1 transition-colors flex-1 ${done ? "text-muted line-through decoration-muted/30" : ""}`}>
                       {step}
                     </p>
                   </button>
@@ -178,18 +208,18 @@ export default function RecipeModal({ recipe, onClose, onAddToList, addedToList,
 
           {recipe.tips && (
             <div className="bg-warm rounded-2xl p-4 flex gap-3">
-              <span className="text-lg flex-shrink-0">💡</span>
-              <p className="text-[13px] leading-relaxed">
+              <span className="text-xl flex-shrink-0">💡</span>
+              <p className="text-[14px] leading-relaxed">
                 <span className="font-bold">Pro tip: </span>{recipe.tips}
               </p>
             </div>
           )}
         </div>
 
-        {/* Sticky actions */}
-        <div className="sticky bottom-0 bg-gradient-to-t from-card via-card to-card/0 px-5 pt-6 pb-5 space-y-2.5">
-          <button onClick={() => onAddToList(scaledIngredients)} disabled={addedToList}
-            className={`w-full py-4 rounded-2xl text-[15px] font-bold transition-all active:scale-[0.98] ${
+        {/* Sticky actions — proper safe-area padding */}
+        <div className="sticky bottom-0 bg-gradient-to-t from-card via-card to-card/0 px-5 pt-8 pb-6 space-y-3">
+          <button onClick={handleAddToList} disabled={addedToList}
+            className={`w-full py-4 rounded-2xl text-[16px] font-bold transition-all active:scale-[0.98] min-h-[52px] ${
               addedToList
                 ? "bg-sage-light text-sage"
                 : "bg-accent text-white hover:bg-accent-dark shadow-button"
@@ -206,7 +236,7 @@ export default function RecipeModal({ recipe, onClose, onAddToList, addedToList,
             )}
           </button>
           <button onClick={onToggleFavorite}
-            className={`w-full py-3.5 rounded-2xl text-[14px] font-semibold transition-all active:scale-[0.98] ${
+            className={`w-full py-3.5 rounded-2xl text-[14px] font-semibold transition-all active:scale-[0.98] min-h-[48px] ${
               isFavorite ? "bg-accent-light text-accent" : "bg-sand text-muted hover:text-accent"
             }`}>
             {isFavorite ? "♥ Saved to Favorites" : "♡ Save to Favorites"}
