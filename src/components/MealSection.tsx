@@ -101,6 +101,7 @@ export default function MealSection({
                 <button onClick={() => onMealClick(meal)} disabled={loadingRecipe === meal.name}
                   className="flex-1 text-left min-w-0">
                   <div className="flex items-center gap-2">
+                    {meal.emoji && <span className="text-lg">{meal.emoji}</span>}
                     <h4 className={`font-bold text-[15px] leading-snug ${planned ? "text-muted" : "text-foreground"}`}>
                       {meal.name}
                     </h4>

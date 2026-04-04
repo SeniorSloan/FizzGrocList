@@ -23,6 +23,7 @@ IMPORTANT: Default to 4 servings so she can meal prep. Include quantities approp
 
 Return a JSON object with:
 - "title": recipe name
+- "emoji": a single food emoji that best represents this dish (e.g. "🌮", "🍝", "🥗", "🍲", "🥘", "🍗", "🐟", "🥑", "🧀")
 - "prepTime": prep time string (e.g. "10 min")
 - "cookTime": cook time string (e.g. "20 min")
 - "servings": number (default 4)

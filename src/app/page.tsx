@@ -23,6 +23,7 @@ export type GroceryItem = {
 
 export type MealPlan = {
   name: string;
+  emoji?: string;
   description: string;
   ingredients: string[];
 };

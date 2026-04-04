@@ -4,6 +4,7 @@ import { useState } from "react";
 
 export type Recipe = {
   title: string;
+  emoji?: string;
   description?: string;
   prepTime: string;
   cookTime: string;
@@ -57,34 +58,36 @@ export default function RecipeModal({ recipe, onClose, onAddToList, addedToList,
         className="relative bg-card rounded-t-[28px] w-full max-w-lg max-h-[92vh] overflow-y-auto animate-slide-up safe-bottom"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag handle */}
-        <div className="sticky top-0 bg-card pt-3 pb-0 rounded-t-[28px] z-10">
-          <div className="w-10 h-1 bg-border rounded-full mx-auto mb-3" />
+        {/* Hero banner with emoji */}
+        <div className="relative bg-gradient-to-br from-accent-light via-pink-50 to-warm rounded-t-[28px] pt-4 pb-8 text-center">
+          <div className="w-10 h-1 bg-white/40 rounded-full mx-auto mb-4" />
+          <div className="text-6xl mb-2 drop-shadow-sm">{recipe.emoji || "🍽️"}</div>
+          {/* Close + fav buttons */}
+          <div className="absolute top-4 right-4 flex gap-2">
+            <button onClick={onToggleFavorite}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 backdrop-blur-sm ${
+                isFavorite ? "bg-white/90" : "bg-white/60 hover:bg-white/90"
+              }`}>
+              <svg className={`w-[18px] h-[18px] transition-colors ${isFavorite ? "text-accent fill-accent" : "text-muted"}`}
+                viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                fill={isFavorite ? "currentColor" : "none"}>
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+              </svg>
+            </button>
+            <button onClick={onClose}
+              className="w-9 h-9 rounded-xl bg-white/60 backdrop-blur-sm flex items-center justify-center text-muted hover:bg-white/90 transition-all active:scale-90">
+              <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
 
+        {/* Content */}
+        <div className="bg-card -mt-4 rounded-t-[20px] relative z-10 pt-5">
           <div className="px-5 pb-4">
-            <div className="flex items-start justify-between gap-3">
-              <h2 className="text-xl font-extrabold leading-tight tracking-tight flex-1">{recipe.title}</h2>
-              <div className="flex gap-2 flex-shrink-0">
-                <button onClick={onToggleFavorite}
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 ${
-                    isFavorite ? "bg-accent-light" : "bg-sand hover:bg-accent-light"
-                  }`}>
-                  <svg className={`w-[18px] h-[18px] transition-colors ${isFavorite ? "text-accent fill-accent" : "text-muted"}`}
-                    viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                    fill={isFavorite ? "currentColor" : "none"}>
-                    <path strokeLinecap="round" strokeLinejoin="round"
-                      d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-                  </svg>
-                </button>
-                <button onClick={onClose}
-                  className="w-9 h-9 rounded-xl bg-sand flex items-center justify-center text-muted hover:text-foreground hover:bg-border transition-all active:scale-90">
-                  <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
+            <h2 className="text-xl font-extrabold leading-tight tracking-tight">{recipe.title}</h2>
             {recipe.description && (
               <p className="text-[13px] text-muted mt-1.5 leading-relaxed">{recipe.description}</p>
             )}

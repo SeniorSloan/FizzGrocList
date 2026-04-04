@@ -30,7 +30,8 @@
       "Bash(git commit:*)",
       "Bash(gh repo:*)",
       "Bash(vercel:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(node:*)"
     ]
   }
 }

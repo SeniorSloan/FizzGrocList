@@ -134,7 +134,7 @@ ${dismissedList.length > 0 ? `\nDO NOT suggest: ${dismissedList.join(", ")}` : "
         role: "user",
         content: `${prompt}
 
-Return a JSON array of objects with: "name" (meal name), "description" (one short sentence about the meal), "ingredients" (array of key ingredients that actually go in this meal). Only return the JSON array, no other text.`,
+Return a JSON array of objects with: "name" (meal name), "emoji" (a single food emoji that represents this dish, like "🌮" "🍝" "🥗" "🍲" "🥘" "🍗" "🐟" "🥑"), "description" (one short sentence about the meal), "ingredients" (array of key ingredients that actually go in this meal). Only return the JSON array, no other text.`,
       },
     ],
   });
