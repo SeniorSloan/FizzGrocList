@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { GroceryItem } from "@/app/page";
+import { GroceryItem, categorizeIngredient } from "@/lib/build-grocery-list";
 import { FAVORITES } from "@/lib/staples";
-import { categorizeIngredient } from "@/lib/build-grocery-list";
 
 const AISLE_EMOJI: Record<string, string> = {
   "Produce": "🥬", "Meat & Protein": "🥩", "Dairy & Eggs": "🧀",

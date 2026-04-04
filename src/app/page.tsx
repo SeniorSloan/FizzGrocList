@@ -11,15 +11,9 @@ import LockScreen from "@/components/LockScreen";
 import StylePicker from "@/components/StylePicker";
 import { DINNER_STYLES, LUNCH_STYLES } from "@/lib/meal-styles";
 import { useLocalStorage } from "@/lib/use-local-storage";
-import { buildGroceryList } from "@/lib/build-grocery-list";
+import { buildGroceryList, GroceryItem } from "@/lib/build-grocery-list";
 import seedLists from "@/data/past-lists.json";
 import pantryDefaults from "@/data/pantry-defaults.json";
-
-export type GroceryItem = {
-  name: string;
-  category: string;
-  checked: boolean;
-};
 
 export type MealPlan = {
   name: string;
@@ -28,7 +22,7 @@ export type MealPlan = {
   ingredients: string[];
 };
 
-export type PastList = {
+type PastList = {
   id: string;
   date: string;
   items: string[];
@@ -82,7 +76,6 @@ function App() {
   const [loadingDinners, setLoadingDinners] = useState(false);
   const [loadingLunches, setLoadingLunches] = useState(false);
   const [loadingList, setLoadingList] = useState(false);
-  const [loadingSearch, setLoadingSearch] = useState(false);
   const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
   const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
   const [loadingFullRecipe, setLoadingFullRecipe] = useState(false);
@@ -120,7 +113,7 @@ function App() {
       });
       const data = await res.json();
       setPlans(data.meals);
-    } catch (e) { console.error(e); }
+    } catch { /* fetch failed */ }
     setLoading(false);
   };
   const fetchDinners = (style?: string | null) => fetchMeals("dinner", style);
@@ -165,7 +158,7 @@ function App() {
         setActiveRecipe(data.recipe);
         setRecipeCache((prev) => ({ ...prev, [meal.name]: data.recipe }));
       }
-    } catch (e) { console.error(e); }
+    } catch { /* fetch failed */ }
     setLoadingRecipe(null);
     setLoadingFullRecipe(false);
   };
@@ -210,7 +203,7 @@ function App() {
         setActiveRecipe(data.recipe);
         setRecipeCache((prev) => ({ ...prev, [option.name]: data.recipe }));
       }
-    } catch (e) { console.error(e); }
+    } catch { /* fetch failed */ }
     setLoadingFullRecipe(false);
   };
 
@@ -271,7 +264,7 @@ function App() {
       setSelectedDinners(new Set());
       setSelectedLunches(new Set());
       setActiveTab("grocery");
-    } catch (e) { console.error(e); }
+    } catch { /* fetch failed */ }
     setLoadingList(false);
   };
 
@@ -306,7 +299,7 @@ function App() {
             </div>
 
             {/* Craving search */}
-            <CravingSearch onOptionPicked={handleSearchOptionPicked} loading={loadingSearch} />
+            <CravingSearch onOptionPicked={handleSearchOptionPicked} />
 
             {/* Dinner style picker */}
             <div className="mb-4">

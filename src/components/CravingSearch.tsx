@@ -10,10 +10,8 @@ type SearchOption = {
 
 export default function CravingSearch({
   onOptionPicked,
-  loading,
 }: {
   onOptionPicked: (option: SearchOption) => void;
-  loading: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [options, setOptions] = useState<SearchOption[]>([]);
@@ -33,9 +31,7 @@ export default function CravingSearch({
       if (data.options?.length > 0) {
         setOptions(data.options);
       }
-    } catch (e) {
-      console.error(e);
-    }
+    } catch { /* fetch failed */ }
     setSearching(false);
   };
 
@@ -113,7 +109,7 @@ export default function CravingSearch({
             <button
               key={i}
               onClick={() => { onOptionPicked(opt); setOptions([]); setQuery(""); }}
-              disabled={loading}
+              disabled={searching}
               className="w-full text-left bg-card rounded-2xl p-4 shadow-card hover:shadow-lifted transition-all active:scale-[0.98] disabled:opacity-50 group"
             >
               <div className="flex items-start justify-between gap-3">
