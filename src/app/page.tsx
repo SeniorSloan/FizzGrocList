@@ -157,10 +157,33 @@ function App() {
       if (data.recipe) {
         setActiveRecipe(data.recipe);
         setRecipeCache((prev) => ({ ...prev, [meal.name]: data.recipe }));
+        // Fetch food image in background (non-blocking)
+        fetchFoodImage(data.recipe.title, meal.name);
       }
     } catch { /* fetch failed */ }
     setLoadingRecipe(null);
     setLoadingFullRecipe(false);
+  };
+
+  // Fetch a food photo from Pexels and attach it to the recipe (non-blocking)
+  const fetchFoodImage = async (title: string, cacheKey: string) => {
+    try {
+      const res = await fetch("/api/food-image", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: title }),
+      });
+      const data = await res.json();
+      if (data.imageUrl) {
+        // Update active recipe with image
+        setActiveRecipe((prev) => prev ? { ...prev, imageUrl: data.imageUrl } : prev);
+        // Update cache with image
+        setRecipeCache((prev) => {
+          const cached = prev[cacheKey];
+          if (cached) return { ...prev, [cacheKey]: { ...cached, imageUrl: data.imageUrl } };
+          return prev;
+        });
+      }
+    } catch { /* image fetch failed — emoji fallback is fine */ }
   };
 
   const handleAddRecipeToList = (scaledIngredients?: string[]) => {
@@ -202,6 +225,7 @@ function App() {
       if (data.recipe) {
         setActiveRecipe(data.recipe);
         setRecipeCache((prev) => ({ ...prev, [option.name]: data.recipe }));
+        fetchFoodImage(data.recipe.title, option.name);
       }
     } catch { /* fetch failed */ }
     setLoadingFullRecipe(false);

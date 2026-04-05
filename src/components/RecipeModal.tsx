@@ -5,6 +5,7 @@ import { useState } from "react";
 export type Recipe = {
   title: string;
   emoji?: string;
+  imageUrl?: string;
   description?: string;
   prepTime: string;
   cookTime: string;
@@ -69,19 +70,32 @@ export default function RecipeModal({ recipe, onClose, onAddToList, addedToList,
         className="relative bg-card rounded-t-[28px] w-full max-w-lg max-h-[92vh] overflow-y-auto animate-slide-up safe-bottom"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Hero banner with emoji — more generous padding */}
-        <div className="relative bg-gradient-to-br from-accent-light via-pink-50 to-warm rounded-t-[28px] pt-5 pb-10 text-center overflow-hidden">
-          {/* Decorative circles */}
-          <div className="absolute -top-8 -left-8 w-32 h-32 bg-accent/5 rounded-full" />
-          <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-warm-dark/5 rounded-full" />
-
-          {/* Drag handle */}
-          <div className="w-10 h-1 bg-white/50 rounded-full mx-auto mb-5" />
-
-          {/* Big emoji */}
-          <div className={`text-7xl mb-3 drop-shadow-sm ${justAdded ? "animate-bounce-in" : ""}`}>
-            {recipe.emoji || "🍽️"}
-          </div>
+        {/* Hero banner — photo or emoji gradient */}
+        <div className="relative rounded-t-[28px] overflow-hidden">
+          {recipe.imageUrl ? (
+            /* Real food photo */
+            <div className="relative h-52">
+              <img
+                src={recipe.imageUrl}
+                alt={recipe.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
+              <div className="absolute top-3 left-0 right-0 flex justify-center">
+                <div className="w-10 h-1 bg-white/50 rounded-full" />
+              </div>
+            </div>
+          ) : (
+            /* Emoji fallback */
+            <div className="relative bg-gradient-to-br from-accent-light via-pink-50 to-warm pt-5 pb-10 text-center">
+              <div className="absolute -top-8 -left-8 w-32 h-32 bg-accent/5 rounded-full" />
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-warm-dark/5 rounded-full" />
+              <div className="w-10 h-1 bg-white/50 rounded-full mx-auto mb-5" />
+              <div className={`text-7xl mb-3 drop-shadow-sm ${justAdded ? "animate-bounce-in" : ""}`}>
+                {recipe.emoji || "🍽️"}
+              </div>
+            </div>
+          )}
 
           {/* Close + fav buttons — 44px minimum */}
           <div className="absolute top-4 left-4">

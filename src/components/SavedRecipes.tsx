@@ -97,12 +97,16 @@ function RecipeCard({ saved, onView, onRemove, removeLabel, isFavorite }: {
       <button onClick={onView}
         className="w-full text-left p-4 active:bg-sand/30 transition-colors min-h-[80px]">
         <div className="flex items-start justify-between gap-3">
-          {/* Emoji preview */}
-          {saved.recipe.emoji && (
-            <div className="w-11 h-11 rounded-2xl bg-accent-light/60 flex items-center justify-center flex-shrink-0">
-              <span className="text-xl">{saved.recipe.emoji}</span>
+          {/* Image or emoji preview */}
+          {saved.recipe.imageUrl ? (
+            <div className="w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0">
+              <img src={saved.recipe.imageUrl} alt={saved.recipe.title} className="w-full h-full object-cover" />
             </div>
-          )}
+          ) : saved.recipe.emoji ? (
+            <div className="w-14 h-14 rounded-2xl bg-accent-light/60 flex items-center justify-center flex-shrink-0">
+              <span className="text-2xl">{saved.recipe.emoji}</span>
+            </div>
+          ) : null}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-[15px] leading-snug">{saved.recipe.title}</h3>
