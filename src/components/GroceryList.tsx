@@ -18,8 +18,9 @@ const AISLE_ORDER = [
   "Snacks", "Household", "Other",
 ];
 
-export default function GroceryList({ items, onToggle, onClear, onAddItem, onDelete, onEditName }: {
+export default function GroceryList({ items, onToggle, onClear, onFinishTrip, onAddItem, onDelete, onEditName }: {
   items: GroceryItem[]; onToggle: (i: number) => void; onClear: () => void;
+  onFinishTrip: (boughtNames: string[]) => void;
   onAddItem: (item: GroceryItem) => void; onDelete: (i: number) => void; onEditName: (i: number, name: string) => void;
 }) {
   const [showAdd, setShowAdd] = useState(false);
@@ -170,6 +171,25 @@ export default function GroceryList({ items, onToggle, onClear, onAddItem, onDel
         <p className="text-[11px] text-muted/60 mt-2 font-medium">
           {checked.length} of {items.length} items in cart
         </p>
+
+        {/* Finish the trip — records what actually went in the cart so future suggestions learn */}
+        {checked.length > 0 && (
+          <>
+            <button
+              onClick={() => onFinishTrip(checked.map(({ item }) => item.name))}
+              className={`w-full mt-4 py-3.5 rounded-xl text-[14px] font-bold transition-all active:scale-[0.98] min-h-[48px] ${
+                allDone
+                  ? "bg-sage text-white shadow-button"
+                  : "bg-sand text-foreground hover:bg-accent-light"
+              }`}
+            >
+              {allDone ? "Finish trip 🎉" : `Finish trip · ${checked.length} bought`}
+            </button>
+            <p className="text-[11px] text-muted/60 mt-2 text-center font-medium">
+              Saves what you bought so meal ideas get better
+            </p>
+          </>
+        )}
       </div>
 
       {/* Quick add panel */}

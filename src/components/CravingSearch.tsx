@@ -10,8 +10,10 @@ type SearchOption = {
 
 export default function CravingSearch({
   onOptionPicked,
+  shoppingHistory,
 }: {
   onOptionPicked: (option: SearchOption) => void;
+  shoppingHistory: string[];
 }) {
   const [query, setQuery] = useState("");
   const [options, setOptions] = useState<SearchOption[]>([]);
@@ -25,7 +27,7 @@ export default function CravingSearch({
       const res = await fetch("/api/search-recipe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: q }),
+        body: JSON.stringify({ query: q, shoppingHistory }),
       });
       const data = await res.json();
       if (data.options?.length > 0) {

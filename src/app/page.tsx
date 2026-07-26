@@ -11,7 +11,7 @@ import LockScreen from "@/components/LockScreen";
 import StylePicker from "@/components/StylePicker";
 import { DINNER_STYLES, LUNCH_STYLES } from "@/lib/meal-styles";
 import { useLocalStorage } from "@/lib/use-local-storage";
-import { buildGroceryList, GroceryItem } from "@/lib/build-grocery-list";
+import { buildGroceryList, toHistoryName, GroceryItem } from "@/lib/build-grocery-list";
 import seedLists from "@/data/past-lists.json";
 import pantryDefaults from "@/data/pantry-defaults.json";
 
@@ -30,6 +30,9 @@ type PastList = {
 };
 
 type Tab = "home" | "grocery" | "recipes" | "pantry";
+
+/** How many shopping trips to remember. Older trips drop off so suggestions track current habits. */
+const MAX_TRIPS = 30;
 
 function buildInitialPantry(): PantryItem[] {
   const items: PantryItem[] = [];
@@ -70,6 +73,7 @@ function App() {
   const [groceryList, setGroceryList] = useLocalStorage<GroceryItem[]>("fizz-grocery-list", []);
   const [pantryItems, setPantryItems] = useLocalStorage<PantryItem[]>("fizz-pantry", buildInitialPantry());
   const [savedRecipes, setSavedRecipes] = useLocalStorage<SavedRecipe[]>("fizz-saved-recipes", []);
+  const [shoppingHistory, setShoppingHistory] = useLocalStorage<PastList[]>("fizz-shopping-history", []);
   const [dismissedMeals, setDismissedMeals] = useLocalStorage<string[]>("fizz-dismissed", []);
   const [favoriteRecipes, setFavoriteRecipes] = useLocalStorage<SavedRecipe[]>("fizz-favorites", []);
 
@@ -85,8 +89,35 @@ function App() {
   const [dinnerStyle, setDinnerStyle] = useState<string | null>(null);
   const [lunchStyle, setLunchStyle] = useState<string | null>(null);
 
-  const allItems = pastLists.flatMap((l) => l.items);
+  // Seed history plus every trip she's actually shopped, so suggestions learn over time
+  const allItems = [...pastLists, ...shoppingHistory].flatMap((l) => l.items);
+  // Unique items, most recently bought first — for craving search, where repeats add nothing
+  const recentItems = Array.from(
+    new Set([...shoppingHistory, ...pastLists].flatMap((l) => l.items))
+  );
   const inStockPantry = pantryItems.filter((p) => p.inStock).map((p) => p.name);
+
+  /** Record what she actually put in the cart, then clear the list for next time */
+  const handleFinishTrip = (boughtNames: string[]) => {
+    const items = Array.from(
+      new Set(boughtNames.map(toHistoryName).filter((name) => name.length > 0))
+    );
+    if (items.length > 0) {
+      const now = new Date();
+      setShoppingHistory((prev) =>
+        [
+          {
+            id: `trip-${now.getTime()}`,
+            date: now.toISOString().slice(0, 10),
+            items,
+            raw: items.join(", "),
+          },
+          ...prev,
+        ].slice(0, MAX_TRIPS)
+      );
+    }
+    setGroceryList([]);
+  };
 
   useEffect(() => {
     if (pastLists.length > 0 && dinnerPlans.length === 0) fetchDinners();
@@ -326,7 +357,7 @@ function App() {
             </div>
 
             {/* Craving search */}
-            <CravingSearch onOptionPicked={handleSearchOptionPicked} />
+            <CravingSearch onOptionPicked={handleSearchOptionPicked} shoppingHistory={recentItems} />
 
             {/* Dinner style picker */}
             <div className="mb-4">
@@ -372,6 +403,7 @@ function App() {
           <GroceryList items={groceryList}
             onToggle={(i) => setGroceryList((prev) => prev.map((item, idx) => idx === i ? { ...item, checked: !item.checked } : item))}
             onClear={() => setGroceryList([])}
+            onFinishTrip={handleFinishTrip}
             onAddItem={(item) => { if (!groceryList.some((g) => g.name.toLowerCase() === item.name.toLowerCase())) setGroceryList((prev) => [...prev, item]); }}
             onDelete={(i) => setGroceryList((prev) => prev.filter((_, idx) => idx !== i))}
             onEditName={(i, name) => setGroceryList((prev) => prev.map((item, idx) => idx === i ? { ...item, name } : item))}

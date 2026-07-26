@@ -253,6 +253,15 @@ function extractCoreName(ing: string): string {
     .trim();
 }
 
+/**
+ * Turn a grocery line back into a plain item name for shopping history.
+ * "Ground turkey (3.5 lb)" -> "Ground turkey", matching the format of the
+ * seed history so the two count as the same item.
+ */
+export function toHistoryName(name: string): string {
+  return name.replace(/\s*\([^)]*\)\s*$/, "").trim();
+}
+
 export function categorizeIngredient(ing: string): string {
   const l = ing.toLowerCase();
   if (/chicken|turkey|beef|salmon|tuna|meat|sausage|shrimp|tilapia|cod|pork|bacon|ham|deli\s/.test(l)) return "Meat & Protein";
