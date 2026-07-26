@@ -115,38 +115,14 @@ export function buildGroceryList(
  * Keeps real shopping quantities (lb, oz, bag, can) but strips cooking measurements (tbsp, tsp, cup).
  */
 function toShoppingName(ing: string): string {
-  // Cooking measurements to strip entirely
-  const cookingMeasure = /^[\d\s\/\.]+(?:tbsp|tsp|tablespoons?|teaspoons?|cups?|cloves?|pinch(?:es)?|dash(?:es)?|splash(?:es)?)\s+(?:of\s+)?/i;
+  const { quantity, item } = splitIngredient(ing);
+  const base = item || stripDescriptors(ing);
+  const name = base.charAt(0).toUpperCase() + base.slice(1);
 
-  if (cookingMeasure.test(ing)) {
-    // Strip the measurement, capitalize the item
-    const cleaned = ing.replace(cookingMeasure, "").replace(/,\s*.*$/, "").trim();
-    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-  }
-
-  // Shopping quantities to keep — reformat as "Item (quantity)"
-  const shoppingQuantity = /^([\d\s\/\.]+(?:lb|lbs|oz|pound|pounds|ounce|ounces|can|cans|bag|bags|box|boxes|bunch|bunches|head|heads|pack|packs|container|jar|jars|bottle|bottles|package|packages)?)\s+(.+)/i;
-  const match = ing.match(shoppingQuantity);
-  if (match) {
-    const qty = match[1].trim();
-    const item = match[2].replace(/,\s*.*$/, "").trim();
-    const capitalized = item.charAt(0).toUpperCase() + item.slice(1);
-    return `${capitalized} (${qty})`;
-  }
-
-  // Just a number + item like "2 avocados"
-  const simpleCount = /^(\d+)\s+(.+)/;
-  const simpleMatch = ing.match(simpleCount);
-  if (simpleMatch) {
-    const count = simpleMatch[1];
-    const item = simpleMatch[2].replace(/,\s*.*$/, "").trim();
-    const capitalized = item.charAt(0).toUpperCase() + item.slice(1);
-    return `${capitalized} (${count})`;
-  }
-
-  // No quantity — just capitalize
-  const cleaned = ing.replace(/,\s*.*$/, "").trim();
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  if (!quantity) return name;
+  return quantity.unit
+    ? `${name} (${formatAmount(quantity.value)} ${quantity.unit})`
+    : `${name} (${formatAmount(quantity.value)})`;
 }
 
 // Measurements used while cooking — these never become a shopping quantity.
@@ -166,6 +142,7 @@ const SHOPPING_UNITS: Record<string, string> = {
   container: "container", containers: "container",
   jar: "jar", jars: "jar",
   bottle: "bottle", bottles: "bottle",
+  packet: "packet", packets: "packet",
 };
 
 type ParsedIngredient = {
@@ -186,9 +163,23 @@ function parseAmount(raw: string): number | null {
   return null;
 }
 
+/**
+ * Drop the asides recipes carry around — "(HEB or Trader Joe's)", ", drained
+ * and rinsed" — leaving just the thing you put in the cart.
+ * Parentheticals go first: they often contain commas ("corn (fresh, frozen)"),
+ * so cutting at the comma first would leave an unbalanced fragment behind.
+ */
+function stripDescriptors(ing: string): string {
+  return ing
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/,\s*.*$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /** Split an ingredient into its countable quantity and its item name */
 function splitIngredient(ing: string): ParsedIngredient {
-  const cleaned = ing.replace(/,\s*.*$/, "").trim();
+  const cleaned = stripDescriptors(ing);
   const match = cleaned.match(
     /^((?:\d+\s+\d+\/\d+)|(?:\d+\/\d+)|(?:\d+(?:\.\d+)?))\s*([a-zA-Z]+)?\s*(?:of\s+)?(.*)$/
   );
