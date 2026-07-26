@@ -112,7 +112,7 @@ function App() {
         body: JSON.stringify({ items: allItems, type, dismissed: dismissedMeals, style: stylePrompt }),
       });
       const data = await res.json();
-      setPlans(data.meals);
+      if (Array.isArray(data.meals) && data.meals.length > 0) setPlans(data.meals);
     } catch { /* fetch failed */ }
     setLoading(false);
   };

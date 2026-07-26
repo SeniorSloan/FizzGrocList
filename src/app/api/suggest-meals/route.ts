@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
-import { parseJsonResponse } from "@/lib/parse-json";
+import { parseJsonResponse, textFromContent } from "@/lib/parse-json";
 
 const client = new Anthropic();
 
@@ -126,9 +126,9 @@ ${dismissedList.length > 0 ? `\nDO NOT suggest: ${dismissedList.join(", ")}` : "
   }
 
   const message = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 2048,
-    temperature: 0.9,
+    model: "claude-sonnet-5",
+    max_tokens: 4096,
+    thinking: { type: "disabled" },
     messages: [
       {
         role: "user",
@@ -139,8 +139,7 @@ Return a JSON array of objects with: "name" (meal name), "emoji" (a single food 
     ],
   });
 
-  const text =
-    message.content[0].type === "text" ? message.content[0].text : "";
+  const text = textFromContent(message.content);
   try {
     const meals = parseJsonResponse(text);
     return NextResponse.json({ meals });

@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
-import { parseJsonResponse } from "@/lib/parse-json";
+import { parseJsonResponse, textFromContent } from "@/lib/parse-json";
 
 const client = new Anthropic();
 
@@ -8,8 +8,9 @@ export async function POST(req: Request) {
   const { meal } = await req.json();
 
   const message = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 2048,
+    model: "claude-sonnet-5",
+    max_tokens: 4096,
+    thinking: { type: "disabled" },
     messages: [
       {
         role: "user",
@@ -36,8 +37,7 @@ Only return the JSON object, no other text.`,
     ],
   });
 
-  const text =
-    message.content[0].type === "text" ? message.content[0].text : "";
+  const text = textFromContent(message.content);
   try {
     const recipe = parseJsonResponse(text);
     return NextResponse.json({ recipe });
