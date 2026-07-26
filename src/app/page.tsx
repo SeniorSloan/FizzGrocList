@@ -80,8 +80,8 @@ function App() {
   const [loadingRecipe, setLoadingRecipe] = useState<string | null>(null);
   const [loadingFullRecipe, setLoadingFullRecipe] = useState(false);
   const [addedToList, setAddedToList] = useState(false);
-  const [plannedDinners, setPlannedDinners] = useState<string[]>([]);
-  const [plannedLunches, setPlannedLunches] = useState<string[]>([]);
+  const [plannedDinners, setPlannedDinners] = useLocalStorage<string[]>("fizz-planned-dinners", []);
+  const [plannedLunches, setPlannedLunches] = useLocalStorage<string[]>("fizz-planned-lunches", []);
   const [dinnerStyle, setDinnerStyle] = useState<string | null>(null);
   const [lunchStyle, setLunchStyle] = useState<string | null>(null);
 

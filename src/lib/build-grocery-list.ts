@@ -73,29 +73,30 @@ export function buildGroceryList(
     }
   }
 
-  // Deduplicate by extracting the "core" item name and keeping the one with best quantity info
-  const seen = new Map<string, string>(); // coreName -> full ingredient string
+  // Group by "core" item name so the same ingredient across recipes lands together
+  const groups = new Map<string, string[]>(); // coreName -> every ingredient string for it
 
   for (const ing of validIngredients) {
     const core = extractCoreName(ing);
-    const existing = seen.get(core);
-
-    if (!existing) {
-      seen.set(core, ing);
+    const group = groups.get(core);
+    if (group) {
+      group.push(ing);
     } else {
-      // Keep whichever has more detail (longer string usually has quantity)
-      if (ing.length > existing.length) {
-        seen.set(core, ing);
-      }
+      groups.set(core, [ing]);
     }
   }
 
-  // Build final list — convert recipe measurements to shopping-friendly names
-  const items: GroceryItem[] = Array.from(seen.values()).map((ing) => ({
-    name: toShoppingName(ing),
-    category: categorizeIngredient(ing),
-    checked: false,
-  }));
+  // Build final list — convert recipe measurements to shopping-friendly names,
+  // adding up quantities when an item shows up in more than one recipe
+  const items: GroceryItem[] = Array.from(groups.values()).map((entries) => {
+    // Most detailed string wins for naming and categorizing (longest usually has quantity)
+    const rep = entries.reduce((a, b) => (b.length > a.length ? b : a));
+    return {
+      name: mergedShoppingName(entries, rep),
+      category: categorizeIngredient(rep),
+      checked: false,
+    };
+  });
 
   // Append always-buy staples
   const existingNames = new Set(items.map((i) => i.name.toLowerCase()));
@@ -148,11 +149,112 @@ function toShoppingName(ing: string): string {
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
 
+// Measurements used while cooking — these never become a shopping quantity.
+// You buy a jar of mayo, not "6 tbsp".
+const COOKING_UNIT = /^(tbsp|tsp|tablespoons?|teaspoons?|cups?|cloves?|pinch(?:es)?|dash(?:es)?|splash(?:es)?)$/i;
+
+// Units worth counting, normalized to a single spelling so "lbs" and "pounds" add together
+const SHOPPING_UNITS: Record<string, string> = {
+  lb: "lb", lbs: "lb", pound: "lb", pounds: "lb",
+  oz: "oz", ounce: "oz", ounces: "oz",
+  can: "can", cans: "can",
+  bag: "bag", bags: "bag",
+  box: "box", boxes: "box",
+  bunch: "bunch", bunches: "bunch",
+  head: "head", heads: "head",
+  pack: "pack", packs: "pack", package: "pack", packages: "pack",
+  container: "container", containers: "container",
+  jar: "jar", jars: "jar",
+  bottle: "bottle", bottles: "bottle",
+};
+
+type ParsedIngredient = {
+  /** null when there's no countable quantity (plain item, or a cooking measurement) */
+  quantity: { value: number; unit: string | null } | null;
+  item: string;
+};
+
+/** Parse "1 1/2", "1/2", "2", "1.5" into a number */
+function parseAmount(raw: string): number | null {
+  const mixed = raw.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+  if (mixed) return Number(mixed[1]) + Number(mixed[2]) / Number(mixed[3]);
+
+  const fraction = raw.match(/^(\d+)\/(\d+)$/);
+  if (fraction) return Number(fraction[1]) / Number(fraction[2]);
+
+  if (/^\d+(?:\.\d+)?$/.test(raw)) return Number(raw);
+  return null;
+}
+
+/** Split an ingredient into its countable quantity and its item name */
+function splitIngredient(ing: string): ParsedIngredient {
+  const cleaned = ing.replace(/,\s*.*$/, "").trim();
+  const match = cleaned.match(
+    /^((?:\d+\s+\d+\/\d+)|(?:\d+\/\d+)|(?:\d+(?:\.\d+)?))\s*([a-zA-Z]+)?\s*(?:of\s+)?(.*)$/
+  );
+  if (!match) return { quantity: null, item: cleaned };
+
+  const value = parseAmount(match[1]);
+  if (value === null) return { quantity: null, item: cleaned };
+
+  const unitToken = match[2];
+  const rest = (match[3] ?? "").trim();
+
+  // "1/2 cup rice" — cooking measurement, so no shopping quantity to add up
+  if (unitToken && COOKING_UNIT.test(unitToken)) {
+    return { quantity: null, item: rest || cleaned };
+  }
+
+  if (unitToken) {
+    const unit = SHOPPING_UNITS[unitToken.toLowerCase()];
+    if (unit) return { quantity: { value, unit }, item: rest };
+    // Not a unit at all — "2 chicken breasts" means the word belongs to the item
+    return { quantity: { value, unit: null }, item: `${unitToken} ${rest}`.trim() };
+  }
+
+  return { quantity: { value, unit: null }, item: rest };
+}
+
+function formatAmount(value: number): string {
+  return String(Math.round(value * 100) / 100);
+}
+
+/**
+ * Name for a grocery line, adding quantities together when the same item came
+ * from several recipes. Falls back to single-item formatting whenever the
+ * amounts can't be combined confidently (mixed units, missing quantities).
+ */
+function mergedShoppingName(entries: string[], rep: string): string {
+  if (entries.length === 1) return toShoppingName(rep);
+
+  const withQuantity = entries
+    .map(splitIngredient)
+    .filter((p): p is ParsedIngredient & { quantity: NonNullable<ParsedIngredient["quantity"]> } =>
+      p.quantity !== null
+    );
+
+  // Nothing to add up — one or zero recipes gave a real quantity
+  if (withQuantity.length < 2) return toShoppingName(rep);
+
+  // Mixed units ("1 lb chicken" + "2 chicken breasts") — don't invent a number
+  const units = new Set(withQuantity.map((p) => p.quantity.unit));
+  if (units.size > 1) return toShoppingName(rep);
+
+  const unit = withQuantity[0].quantity.unit;
+  const total = withQuantity.reduce((sum, p) => sum + p.quantity.value, 0);
+  const item = splitIngredient(rep).item || rep;
+  const name = item.charAt(0).toUpperCase() + item.slice(1);
+
+  return unit ? `${name} (${formatAmount(total)} ${unit})` : `${name} (${formatAmount(total)})`;
+}
+
 /** Extract the "core" ingredient name for dedup (strips quantities, prep instructions) */
 function extractCoreName(ing: string): string {
-  return ing
+  // Reuse the quantity parser so grouping and summing always agree on where
+  // the amount ends and the item begins (handles decimals, fractions, "1 1/2")
+  return splitIngredient(ing)
+    .item
     .toLowerCase()
-    .replace(/^\d[\d\/\s]*(?:lb|lbs|oz|cup|cups|tbsp|tsp|tablespoon|teaspoon|can|cans|bag|bunch|head|clove|cloves|piece|pieces|count|pack|packs|container|box|jar|pound|pounds|ounce|ounces|slice|slices)?s?\b/g, "")
     .replace(/\(.*?\)/g, "")
     .replace(/,.*$/, "")
     .replace(/\b(diced|sliced|chopped|minced|shredded|grated|crushed|fresh|frozen|dried|canned|boneless|skinless|lean|plain|small|medium|large|whole|cut into|drained|rinsed)\b/g, "")
